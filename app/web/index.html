@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SaveBucks - Best Deals Community</title>
+  <meta name="description" content="Discover the best deals and save money with the most trusted community-driven US deals platform." />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script>
+    // Prevent FOUC by setting theme immediately
+    (function() {
+      try {
+        const theme = localStorage.getItem('theme');
+        const shouldDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        const root = document.documentElement;
+        if (shouldDark) {
+          root.classList.add('dark');
+          root.style.colorScheme = 'dark';
+        } else {
+          root.classList.remove('dark');
+          root.style.colorScheme = 'light';
+        }
+      } catch (_) {}
+    })();
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

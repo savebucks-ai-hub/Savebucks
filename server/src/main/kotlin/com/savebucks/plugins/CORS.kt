@@ -1,0 +1,45 @@
+package com.savebucks.plugins
+
+import com.savebucks.config.CorsConfig
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.cors.routing.*
+
+/**
+ * Configures CORS with the origins listed in [CorsConfig.allowedOrigins].
+ *
+ * Credentials are allowed because the React client sends session cookies
+ * and Authorization headers.
+ */
+fun Application.configureCORS(config: CorsConfig) {
+    install(CORS) {
+        config.allowedOrigins.forEach { origin ->
+            // Parse each origin URL into host + optional port so Ktor's allowHost() works correctly
+            val url = origin.trimEnd('/')
+            val withoutScheme = url.removePrefix("https://").removePrefix("http://")
+            val host = withoutScheme.substringBefore(":")
+            val port = withoutScheme.substringAfter(":", "").toIntOrNull()
+            val scheme = if (url.startsWith("https")) "https" else "http"
+
+            allowHost(host, schemes = listOf(scheme), subDomains = emptyList())
+        }
+
+        allowHeader(HttpHeaders.Authorization)
+        allowHeader(HttpHeaders.ContentType)
+        allowHeader(HttpHeaders.AccessControlAllowOrigin)
+        allowHeader("X-Requested-With")
+        allowHeader("X-Request-ID")
+
+        allowMethod(HttpMethod.Get)
+        allowMethod(HttpMethod.Post)
+        allowMethod(HttpMethod.Put)
+        allowMethod(HttpMethod.Patch)
+        allowMethod(HttpMethod.Delete)
+        allowMethod(HttpMethod.Options)
+
+        allowCredentials = true
+        allowNonSimpleContentTypes = true
+
+        maxAgeInSeconds = 86_400  // pre-flight cache for 24 h
+    }
+}
