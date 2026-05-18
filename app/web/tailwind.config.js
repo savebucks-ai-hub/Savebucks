@@ -106,7 +106,15 @@ export default {
           800: '#991b1b',
           900: '#7f1d1d',
           950: '#450a0a',
-        }
+        },
+        // Theme CSS-var tokens
+        brand:    { DEFAULT: 'var(--brand)', dark: 'var(--brand-dark)', tint: 'var(--brand-tint)', text: 'var(--brand-text)' },
+        accent:   { DEFAULT: 'var(--accent)', dark: 'var(--accent-dark)', tint: 'var(--accent-tint)', text: 'var(--accent-text)' },
+        heat:     { DEFAULT: 'var(--heat)', tint: 'var(--heat-tint)', text: 'var(--heat-text)' },
+        'on-brand': 'var(--text-on-brand)',
+        page:     'var(--bg-page)',
+        card:     'var(--bg-card)',
+        elevated: 'var(--bg-elevated)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

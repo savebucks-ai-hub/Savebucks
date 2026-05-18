@@ -4,13 +4,66 @@
 @import './styles/animations.css';
 @import './styles/ai-chat.css';
 
+/* ── Theme 5: Sky + Coral ───────────────────────────────────────────────── */
+/* Swap themes: replace this :root block only — nothing else changes.       */
+:root {
+  --bg-page:     #F0F7FC;
+  --bg-card:     #FFFFFF;
+  --bg-elevated: #F8FBFE;
+  --border:      #CFE3F4;
+  --border-hover:#93C5FD;
+
+  --text-primary:   #0C2A4D;
+  --text-secondary: #475569;
+  --text-tertiary:  #94A3B8;
+  --text-on-brand:  #FFFFFF;
+
+  --brand:      #0EA5E9;
+  --brand-dark: #0369A1;
+  --brand-tint: #DBEAFE;
+  --brand-text: #1E40AF;
+
+  --accent:      #FB923C;
+  --accent-dark: #EA580C;
+  --accent-tint: #FFEDD5;
+  --accent-text: #C2410C;
+
+  --heat:      #EA580C;
+  --heat-tint: #FFEDD5;
+  --heat-text: #9A3412;
+
+  --danger:      #DC2626;
+  --danger-tint: #FEE2E2;
+  --success:     #15803D;
+
+  /* ── UI component vars — swap with the theme block above ── */
+  --bg-nav:        rgba(14, 165, 233, 0.08);
+  --nav-border:    #CFE3F4;
+  --nav-text:      #475569;
+  --nav-text-hover:#0C2A4D;
+
+  /* CTA button (Post Deal) — coral gradient */
+  --cta-gradient:  linear-gradient(135deg, #FB923C, #EA580C);
+  --cta-text:      #FFFFFF;
+  --cta-bg-hover:  #EA580C;
+
+  /* Active filter / category pill — sky gradient */
+  --pill-gradient: linear-gradient(135deg, #0EA5E9, #0369A1);
+  --pill-text:     #FFFFFF;
+
+  /* Logo / brand mark filter for CSS img tinting */
+  --logo-filter:   brightness(0) saturate(100%) invert(53%) sepia(98%) saturate(1200%) hue-rotate(172deg) brightness(98%);
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
   }
 
   body {
-    @apply antialiased bg-secondary-50 text-secondary-900;
+    @apply antialiased;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
     font-family: 'Inter', system-ui, sans-serif;
   }
 

@@ -52,8 +52,10 @@ export function SocialDealCard({ deal, index = 0 }) {
       <Link to={`/deal/${deal.id}`} className="block h-full">
         {/* Ultra-compact card with fixed height */}
         <div
-          className="relative bg-white rounded-lg p-2 border border-gray-100 h-full
-                     transition-all duration-200 hover:shadow-md hover:border-gray-200"
+          className="relative rounded-lg p-2 h-full transition-all duration-200 hover:shadow-md"
+          style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-hover)'}
+          onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
         >
           <div className="flex gap-3 h-full">
             {/* Product Image - Larger */}
@@ -89,7 +91,10 @@ export function SocialDealCard({ deal, index = 0 }) {
               </div>
 
               {/* Title - Single line */}
-              <h3 className="text-xs font-medium text-gray-800 line-clamp-1 group-hover:text-violet-600 transition-colors mb-1">
+              <h3 className="text-xs font-medium line-clamp-1 transition-colors mb-1" style={{ color: 'var(--text-primary)' }}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-dark)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-primary)'}
+              >
                 {deal.title}
               </h3>
 
@@ -106,7 +111,7 @@ export function SocialDealCard({ deal, index = 0 }) {
                   </span>
                 )}
                 {discount > 0 && (
-                  <span className="text-[10px] font-semibold text-red-500">
+                  <span className="text-[10px] font-semibold" style={{ color: 'var(--accent-dark)' }}>
                     -{discount}%
                   </span>
                 )}
@@ -116,7 +121,7 @@ export function SocialDealCard({ deal, index = 0 }) {
             {/* Right Side - Minimal meta */}
             <div className="flex flex-col items-end justify-between flex-shrink-0">
               {/* Vote */}
-              <div className={`flex items-center gap-0.5 text-[10px] ${votes > 0 ? 'text-violet-600' : 'text-gray-400'}`}>
+              <div className="flex items-center gap-0.5 text-[10px]" style={{ color: votes > 0 ? 'var(--brand)' : 'var(--text-tertiary)' }}>
                 <ArrowUp className="w-3 h-3" />
                 <span>{votes}</span>
               </div>

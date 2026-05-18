@@ -47,8 +47,8 @@ const Navbar = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-14 lg:h-16">
-      {/* Glassmorphism background - no border */}
-      <div className="absolute inset-0 bg-white/70 backdrop-blur-2xl" />
+      {/* Glassmorphism background */}
+      <div className="absolute inset-0 backdrop-blur-2xl" style={{ backgroundColor: 'var(--bg-nav)', borderBottom: '1px solid var(--nav-border)' }} />
 
       <div className="relative h-full max-w-screen-2xl mx-auto px-4 sm:px-6 flex items-center justify-between">
 
@@ -60,6 +60,7 @@ const Navbar = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="h-10 w-auto"
+            style={{ filter: 'var(--logo-filter)' }}
           />
         </Link>
 
@@ -71,14 +72,20 @@ const Navbar = () => {
           <div className="hidden lg:flex items-center">
             <Link
               to="/forums"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-900/5 transition-all duration-200"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+              style={{ color: 'var(--nav-text)' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--nav-text-hover)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--nav-text)'}
             >
               <Users className="w-4 h-4" />
               <span>Community</span>
             </Link>
             <Link
               to="/saved-items"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-900/5 transition-all duration-200"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+              style={{ color: 'var(--nav-text)' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--nav-text-hover)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--nav-text)'}
             >
               <Bookmark className="w-4 h-4" />
               <span>Saved</span>
@@ -89,7 +96,8 @@ const Navbar = () => {
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Link
               to="/post"
-              className="hidden sm:flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white rounded-full text-sm font-semibold shadow-lg shadow-violet-500/25 transition-all duration-200"
+              className="hidden sm:flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold shadow-lg transition-all duration-200"
+              style={{ background: 'var(--cta-gradient)', color: 'var(--cta-text)' }}
             >
               <Plus className="w-4 h-4" />
               <span className="hidden lg:inline">Post Deal</span>
