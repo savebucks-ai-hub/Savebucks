@@ -54,7 +54,7 @@ Copy `server/.env.example` to `server/.env` and fill in:
 - `OPENAI_API_KEY` — optional; AI chat is disabled gracefully when absent
 - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` — optional; web push disabled when absent
 - `CORS_ALLOWED_ORIGINS` — comma-separated origins for CORS
-- `WEB_DIST_PATH` — path to the built React app (`../web/dist`)
+- `WEB_DIST_PATH` — path to the built React app (`../app/web/dist`)
 
 For the worker: same Supabase vars, plus optional `TELEGRAM_BOT_TOKEN` and `TELEGRAM_ALLOWED_CHANNELS`.
 

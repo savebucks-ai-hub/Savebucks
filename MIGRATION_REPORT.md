@@ -150,7 +150,7 @@ npm run dev
 cd web && npm run build && cd ..
 
 # 2. Set WEB_DIST_PATH so Ktor serves the built files
-export WEB_DIST_PATH=./web/dist
+export WEB_DIST_PATH=../app/web/dist
 
 # 3. Run Ktor — it serves both API and React SPA
 ./gradlew :server:run
