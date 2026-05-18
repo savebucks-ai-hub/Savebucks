@@ -4,13 +4,46 @@
 @import './styles/animations.css';
 @import './styles/ai-chat.css';
 
+/* ── Theme 2: Mint + Indigo ─────────────────────────────────────────────── */
+:root {
+  --bg-page: #F4FBF8;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #F9FDFB;
+  --border: #D6EFE3;
+  --border-hover: #A7E3C8;
+
+  --text-primary: #0F1A2C;
+  --text-secondary: #475569;
+  --text-tertiary: #94A3B8;
+  --text-on-brand: #FFFFFF;
+
+  --brand: #10B981;
+  --brand-dark: #059669;
+  --brand-tint: #D1FAE5;
+  --brand-text: #065F46;
+
+  --accent: #4F46E5;
+  --accent-dark: #4338CA;
+  --accent-tint: #EEF2FF;
+  --accent-text: #3730A3;
+
+  --heat: #F59E0B;
+  --heat-tint: #FEF3C7;
+  --heat-text: #92400E;
+
+  --danger: #EF4444;
+  --danger-tint: #FEE2E2;
+  --success: #10B981;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
   }
 
   body {
-    @apply antialiased bg-secondary-50 text-secondary-900;
+    @apply antialiased text-secondary-900;
+    background-color: var(--bg-page);
     font-family: 'Inter', system-ui, sans-serif;
   }
 

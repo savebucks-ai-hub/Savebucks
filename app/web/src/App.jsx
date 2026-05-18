@@ -34,7 +34,7 @@ export function App() {
   return (
     <CommandMenu>
       <LocationProvider>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-900 dark:to-slate-800 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+        <div className="min-h-screen text-slate-900 dark:text-slate-100 transition-colors duration-300" style={{ backgroundColor: 'var(--bg-page)' }}>
           <SkipLink />
           <Navbar />
           <main id="main" className="flex-1">

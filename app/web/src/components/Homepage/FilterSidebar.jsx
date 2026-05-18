@@ -72,7 +72,7 @@ export function FilterSidebar({ activeFilter = 'all', onFilterChange, activeCate
                         ${isActive
                           ? isForYou
                             ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md shadow-amber-500/25'
-                            : 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-md shadow-violet-500/20'
+                            : 'bg-accent text-on-brand shadow-md'
                           : isForYou
                             ? 'text-amber-600 hover:text-amber-700 hover:bg-amber-50 hover:shadow-sm hover:translate-x-0.5'
                             : 'text-slate-600 hover:text-slate-900 hover:bg-white hover:shadow-sm hover:translate-x-0.5'
@@ -119,7 +119,7 @@ export function FilterSidebar({ activeFilter = 'all', onFilterChange, activeCate
                         w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium 
                         transition-all duration-200 transform-gpu
                         ${isActive
-                          ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-md shadow-violet-500/20'
+                          ? 'bg-accent text-on-brand shadow-md'
                           : 'text-slate-600 hover:text-slate-900 hover:bg-white hover:shadow-sm hover:translate-x-0.5'
                         }
                       `}

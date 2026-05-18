@@ -47,8 +47,8 @@ const Navbar = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-14 lg:h-16">
-      {/* Glassmorphism background - no border */}
-      <div className="absolute inset-0 bg-white/70 backdrop-blur-2xl" />
+      {/* Glassmorphism background — mint tinted */}
+      <div className="absolute inset-0 backdrop-blur-2xl border-b border-[#D6EFE3]" style={{ backgroundColor: 'rgba(244,251,248,0.85)' }} />
 
       <div className="relative h-full max-w-screen-2xl mx-auto px-4 sm:px-6 flex items-center justify-between">
 
@@ -85,11 +85,11 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Post Button - Gradient with glow */}
+          {/* Post Button — theme accent CTA */}
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Link
               to="/post"
-              className="hidden sm:flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white rounded-full text-sm font-semibold shadow-lg shadow-violet-500/25 transition-all duration-200"
+              className="hidden sm:flex items-center gap-1.5 px-5 py-2.5 bg-accent hover:bg-accent-dark text-on-brand rounded-full text-sm font-semibold shadow-lg transition-all duration-200"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden lg:inline">Post Deal</span>
@@ -107,8 +107,8 @@ const Navbar = () => {
                   className="flex items-center gap-2 p-1 rounded-full hover:bg-slate-900/5 transition-colors"
                 >
                   <Avatar
-                    className="w-9 h-9 shadow-lg shadow-violet-500/20"
-                    gradient="purple"
+                    className="w-9 h-9 shadow-lg"
+                    gradient="brand"
                     fallback={userProfile?.display_name || user.email || 'U'}
                   />
                 </motion.button>
@@ -234,7 +234,7 @@ const Navbar = () => {
               <Link to="/saved-items" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-700 hover:bg-slate-900/5 transition-colors">
                 <Bookmark className="w-5 h-5" /> Saved
               </Link>
-              <Link to="/post" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 mt-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-semibold shadow-lg shadow-violet-500/25">
+              <Link to="/post" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 mt-2 bg-accent text-on-brand rounded-xl font-semibold shadow-lg">
                 <Plus className="w-5 h-5" /> Post Deal
               </Link>
             </nav>

@@ -46,6 +46,28 @@ export default {
           900: '#78350F',
           950: '#451A03',
         },
+        // ── Theme tokens — backed by CSS vars so swapping themes = change :root only ──
+        brand: {
+          DEFAULT: 'var(--brand)',
+          dark:    'var(--brand-dark)',
+          tint:    'var(--brand-tint)',
+          text:    'var(--brand-text)',
+        },
+        accent: {
+          DEFAULT: 'var(--accent)',
+          dark:    'var(--accent-dark)',
+          tint:    'var(--accent-tint)',
+          text:    'var(--accent-text)',
+        },
+        heat: {
+          DEFAULT: 'var(--heat)',
+          tint:    'var(--heat-tint)',
+          text:    'var(--heat-text)',
+        },
+        'on-brand': 'var(--text-on-brand)',
+        page:       'var(--bg-page)',
+        card:       'var(--bg-card)',
+        elevated:   'var(--bg-elevated)',
         // Background Colors
         'off-white': '#FAFAFA',
         'soft-green': '#F0FDF4',

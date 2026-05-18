@@ -62,7 +62,7 @@ export default function SocialHomepage() {
   const isForYouActive = filter === 'for-you';
 
   return (
-    <div className="h-screen overflow-hidden bg-surface pt-14 lg:pt-16">
+    <div className="h-screen overflow-hidden pt-14 lg:pt-16" style={{ backgroundColor: 'var(--bg-page)' }}>
       {/* Command Palette - ⌘K */}
       <CommandPalette onFilterChange={setFilter} onAskAI={handleAskAI} />
 
@@ -97,15 +97,16 @@ export default function SocialHomepage() {
                   animate={{ opacity: 1, y: 0, x: 0 }}
                   exit={{ opacity: 0, y: -10, x: 20 }}
                   onClick={() => setIsAIActive(true)}
-                  className="absolute top-6 right-6 z-50 flex items-center gap-2.5 bg-white/90 backdrop-blur-md border border-violet-100 shadow-[0_4px_20px_-4px_rgba(124,58,237,0.15)] pl-3 pr-4 py-2 rounded-full group hover:border-violet-200 transition-all cursor-pointer"
+                  className="absolute top-6 right-6 z-50 flex items-center gap-2.5 bg-card/90 backdrop-blur-md pl-3 pr-4 py-2 rounded-full group transition-all cursor-pointer"
+                  style={{ border: '1px solid var(--accent-tint)', boxShadow: '0 4px 20px -4px color-mix(in srgb, var(--accent) 15%, transparent)' }}
                 >
                   <div className="relative flex items-center justify-center w-5 h-5">
-                    <Sparkles className={`w-4 h-4 ${chatState.isStreaming ? 'text-violet-600 animate-pulse' : 'text-gray-400 group-hover:text-violet-600 transition-colors'}`} />
+                    <Sparkles className={`w-4 h-4 ${chatState.isStreaming ? 'text-accent animate-pulse' : 'text-gray-400 group-hover:text-accent transition-colors'}`} />
                     {chatState.isStreaming && (
-                      <span className="absolute inset-0 bg-violet-500/30 rounded-full animate-ping" />
+                      <span className="absolute inset-0 bg-accent/30 rounded-full animate-ping" />
                     )}
                   </div>
-                  <span className="text-sm font-semibold text-gray-700 group-hover:text-violet-700 transition-colors">
+                  <span className="text-sm font-semibold text-gray-700 group-hover:text-accent-dark transition-colors">
                     {chatState.isStreaming ? 'AI Thinking...' : 'Return to Chat'}
                   </span>
                 </motion.button>

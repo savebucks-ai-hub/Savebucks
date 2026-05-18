@@ -42,14 +42,14 @@ function CouponsWidget() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
-      className="bg-white rounded-xl p-3 shadow-sm"
+      className="bg-card rounded-xl p-3 shadow-sm" style={{ border: '1px solid var(--border)' }}
     >
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-          <Ticket className="w-3.5 h-3.5 text-violet-500" />
+          <Ticket className="w-3.5 h-3.5 text-brand" />
           Latest Coupons
         </h3>
-        <Link to="/coupons" className="text-[10px] text-violet-600 hover:text-violet-700 flex items-center gap-0.5 font-medium">
+        <Link to="/coupons" className="text-[10px] text-accent hover:text-accent-dark flex items-center gap-0.5 font-medium">
           View All <ArrowRight className="w-2.5 h-2.5" />
         </Link>
       </div>
@@ -71,7 +71,7 @@ function CouponsWidget() {
             >
               <Link
                 to={`/coupon/${coupon.id}`}
-                className="flex items-center gap-2.5 p-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-200 group border border-transparent hover:border-violet-100 hover:shadow-sm"
+                className="flex items-center gap-2.5 p-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-200 group border border-transparent hover:border-brand-tint hover:shadow-sm"
               >
                 {/* Company Logo */}
                 <div className="w-8 h-8 rounded-md bg-white border border-gray-100 flex items-center justify-center overflow-hidden shrink-0">
@@ -82,7 +82,7 @@ function CouponsWidget() {
                       className="w-full h-full object-contain p-0.5"
                     />
                   ) : (
-                    <div className="w-full h-full bg-violet-50 text-violet-600 flex items-center justify-center text-xs font-bold">
+                    <div className="w-full h-full bg-brand-tint text-brand-text flex items-center justify-center text-xs font-bold">
                       {coupon.company?.name?.[0] || 'C'}
                     </div>
                   )}
@@ -91,7 +91,7 @@ function CouponsWidget() {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-medium text-slate-800 truncate group-hover:text-violet-700 transition-colors">
+                    <span className="text-xs font-medium text-slate-800 truncate group-hover:text-accent transition-colors">
                       {coupon.company?.name || 'Unknown Store'}
                     </span>
                     {coupon.discount_value && (
@@ -140,14 +140,14 @@ function TopCompaniesWidget() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="bg-white rounded-xl p-3 shadow-sm"
+      className="bg-card rounded-xl p-3 shadow-sm" style={{ border: '1px solid var(--border)' }}
     >
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-          <Building2 className="w-3.5 h-3.5 text-violet-500" />
+          <Building2 className="w-3.5 h-3.5 text-brand" />
           Top Companies
         </h3>
-        <Link to="/companies" className="text-[10px] text-violet-600 hover:text-violet-700 flex items-center gap-0.5 font-medium">
+        <Link to="/companies" className="text-[10px] text-accent hover:text-accent-dark flex items-center gap-0.5 font-medium">
           View All <ArrowRight className="w-2.5 h-2.5" />
         </Link>
       </div>
@@ -209,7 +209,7 @@ function LeaderboardWidget() {
   ];
 
   const avatarGradients = [
-    'from-violet-500 to-purple-600',
+    'from-indigo-500 to-indigo-700',
     'from-pink-500 to-rose-600',
     'from-cyan-500 to-blue-600',
     'from-emerald-500 to-green-600',
@@ -221,14 +221,14 @@ function LeaderboardWidget() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
-      className="bg-white rounded-xl p-3 shadow-sm"
+      className="bg-card rounded-xl p-3 shadow-sm" style={{ border: '1px solid var(--border)' }}
     >
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
           <Trophy className="w-3.5 h-3.5 text-yellow-500" />
           Top Savers
         </h3>
-        <Link to="/leaderboard" className="text-[10px] text-violet-600 hover:text-violet-700 flex items-center gap-0.5 font-medium">
+        <Link to="/leaderboard" className="text-[10px] text-accent hover:text-accent-dark flex items-center gap-0.5 font-medium">
           View All <ArrowRight className="w-2.5 h-2.5" />
         </Link>
       </div>
@@ -261,7 +261,7 @@ function LeaderboardWidget() {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-medium text-slate-800 truncate group-hover:text-violet-600 transition-colors">
+                  <div className="text-xs font-medium text-slate-800 truncate group-hover:text-accent transition-colors">
                     {user.handle || `User`}
                   </div>
                   <div className="text-[10px] text-slate-400">
