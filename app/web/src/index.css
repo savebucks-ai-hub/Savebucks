@@ -4,13 +4,70 @@
 @import './styles/animations.css';
 @import './styles/ai-chat.css';
 
+/* ── Theme 4: Slate + Lime ──────────────────────────────────────────────── */
+/* To swap themes: replace this entire :root block. Nothing else changes.   */
+:root {
+  /* Surfaces */
+  --bg-page:     #F8FAFC;
+  --bg-card:     #FFFFFF;
+  --bg-elevated: #F1F5F9;
+  --border:      #E2E8F0;
+  --border-hover:#CBD5E1;
+
+  /* Text */
+  --text-primary:   #0F172A;
+  --text-secondary: #475569;
+  --text-tertiary:  #94A3B8;
+  --text-on-brand:  #BEF264;   /* lime on dark */
+
+  /* Brand — slate */
+  --brand:      #0F172A;
+  --brand-dark: #020617;
+  --brand-tint: #F1F5F9;
+  --brand-text: #BEF264;
+
+  /* Accent — lime */
+  --accent:      #BEF264;
+  --accent-dark: #65A30D;
+  --accent-tint: #ECFCCB;
+  --accent-text: #3F6212;
+
+  /* Heat — lime (savings vibe) */
+  --heat:      #84CC16;
+  --heat-tint: #ECFCCB;
+  --heat-text: #365314;
+
+  /* Semantic */
+  --danger:      #DC2626;
+  --danger-tint: #FEE2E2;
+  --success:     #65A30D;
+
+  /* ── UI component vars — also swap with the theme block above ── */
+  /* Navbar */
+  --bg-nav:        rgba(15, 23, 42, 0.95);
+  --nav-border:    rgba(190, 242, 100, 0.12);
+  --nav-text:      #94A3B8;
+  --nav-text-hover:#F1F5F9;
+
+  /* Primary CTA button (Post Deal) */
+  --cta-bg:       #0F172A;
+  --cta-text:     #BEF264;
+  --cta-bg-hover: #020617;
+
+  /* Active filter/category pill */
+  --pill-bg:      #0F172A;
+  --pill-text:    #BEF264;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
   }
 
   body {
-    @apply antialiased bg-secondary-50 text-secondary-900;
+    @apply antialiased;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
     font-family: 'Inter', system-ui, sans-serif;
   }
 

@@ -52,8 +52,10 @@ export function SocialDealCard({ deal, index = 0 }) {
       <Link to={`/deal/${deal.id}`} className="block h-full">
         {/* Ultra-compact card with fixed height */}
         <div
-          className="relative bg-white rounded-lg p-2 border border-gray-100 h-full
-                     transition-all duration-200 hover:shadow-md hover:border-gray-200"
+          className="relative bg-card rounded-lg p-2 h-full transition-all duration-200 hover:shadow-md"
+          style={{ border: '1px solid var(--border)' }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-hover)'}
+          onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
         >
           <div className="flex gap-3 h-full">
             {/* Product Image - Larger */}
@@ -82,14 +84,14 @@ export function SocialDealCard({ deal, index = 0 }) {
                 <Store className="w-2.5 h-2.5 text-gray-400 flex-shrink-0" />
                 <span className="text-[10px] text-gray-400 truncate max-w-[60px]">{company.name}</span>
                 {company.is_verified && (
-                  <svg className="w-2.5 h-2.5 text-violet-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-2.5 h-2.5 text-accent flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 )}
               </div>
 
               {/* Title - Single line */}
-              <h3 className="text-xs font-medium text-gray-800 line-clamp-1 group-hover:text-violet-600 transition-colors mb-1">
+              <h3 className="text-xs font-medium text-gray-800 line-clamp-1 group-hover:text-accent-dark transition-colors mb-1">
                 {deal.title}
               </h3>
 
@@ -106,7 +108,7 @@ export function SocialDealCard({ deal, index = 0 }) {
                   </span>
                 )}
                 {discount > 0 && (
-                  <span className="text-[10px] font-semibold text-red-500">
+                  <span className="text-[10px] font-semibold px-1 rounded bg-accent-tint text-accent-text">
                     -{discount}%
                   </span>
                 )}
@@ -116,7 +118,7 @@ export function SocialDealCard({ deal, index = 0 }) {
             {/* Right Side - Minimal meta */}
             <div className="flex flex-col items-end justify-between flex-shrink-0">
               {/* Vote */}
-              <div className={`flex items-center gap-0.5 text-[10px] ${votes > 0 ? 'text-violet-600' : 'text-gray-400'}`}>
+              <div className={`flex items-center gap-0.5 text-[10px] ${votes > 0 ? 'text-accent-dark' : 'text-gray-400'}`}>
                 <ArrowUp className="w-3 h-3" />
                 <span>{votes}</span>
               </div>

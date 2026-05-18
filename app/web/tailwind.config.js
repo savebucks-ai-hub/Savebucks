@@ -5,6 +5,14 @@ export default {
   theme: {
     extend: {
       colors: {
+        // ── CSS-var-backed theme tokens — swap themes by changing :root only ──
+        brand:    { DEFAULT: 'var(--brand)', dark: 'var(--brand-dark)', tint: 'var(--brand-tint)', text: 'var(--brand-text)' },
+        accent:   { DEFAULT: 'var(--accent)', dark: 'var(--accent-dark)', tint: 'var(--accent-tint)', text: 'var(--accent-text)' },
+        heat:     { DEFAULT: 'var(--heat)', tint: 'var(--heat-tint)', text: 'var(--heat-text)' },
+        'on-brand': 'var(--text-on-brand)',
+        page:     'var(--bg-page)',
+        card:     'var(--bg-card)',
+        elevated: 'var(--bg-elevated)',
         // Etsy/Dribbble Inspired Palette
         primary: {
           50: '#ECFDF5',

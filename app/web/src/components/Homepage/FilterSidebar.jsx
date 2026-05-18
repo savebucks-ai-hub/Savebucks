@@ -67,17 +67,18 @@ export function FilterSidebar({ activeFilter = 'all', onFilterChange, activeCate
                     <button
                       onClick={() => onFilterChange(filter.id)}
                       className={`
-                        w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium 
+                        w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium
                         transition-all duration-200 transform-gpu
                         ${isActive
                           ? isForYou
                             ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md shadow-amber-500/25'
-                            : 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-md shadow-violet-500/20'
+                            : 'shadow-md'
                           : isForYou
                             ? 'text-amber-600 hover:text-amber-700 hover:bg-amber-50 hover:shadow-sm hover:translate-x-0.5'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-white hover:shadow-sm hover:translate-x-0.5'
+                            : 'hover:bg-elevated hover:shadow-sm hover:translate-x-0.5'
                         }
                       `}
+                      style={isActive && !isForYou ? { backgroundColor: 'var(--pill-bg)', color: 'var(--pill-text)' } : {}}
                     >
                       <Icon className={`w-3.5 h-3.5 ${isForYou && !isActive ? 'text-amber-500' : ''}`} />
                       <span>{filter.label}</span>
@@ -116,13 +117,11 @@ export function FilterSidebar({ activeFilter = 'all', onFilterChange, activeCate
                     <button
                       onClick={() => onCategoryChange(isActive ? null : category.id)}
                       className={`
-                        w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium 
+                        w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium
                         transition-all duration-200 transform-gpu
-                        ${isActive
-                          ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-md shadow-violet-500/20'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-white hover:shadow-sm hover:translate-x-0.5'
-                        }
+                        ${isActive ? 'shadow-md' : 'hover:bg-elevated hover:shadow-sm hover:translate-x-0.5'}
                       `}
+                      style={isActive ? { backgroundColor: 'var(--pill-bg)', color: 'var(--pill-text)' } : {}}
                     >
                       <Icon className="w-3.5 h-3.5" />
                       <span>{category.label}</span>

@@ -18,6 +18,8 @@
  */
 
 import { api } from './api';
+import { DEMO_MODE } from './demoMode';
+import { DUMMY_DEALS } from './dummyData';
 
 /**
  * Feed API with advanced patterns
@@ -28,6 +30,11 @@ export const feedApi = {
    * Pattern: Twitter API v2 expansions
    */
   async getFeed(options = {}) {
+    if (DEMO_MODE) {
+      await new Promise(r => setTimeout(r, 350));
+      return this.normalizeFeedResponse({ items: DUMMY_DEALS });
+    }
+
     const {
       cursor,
       limit = 12,
