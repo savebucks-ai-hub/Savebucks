@@ -52,7 +52,10 @@ export function FilterSidebar({ activeFilter = 'all', onFilterChange, activeCate
       <aside className="space-y-4">
         {/* Filters */}
         <div>
-          <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2 px-1">
+          <h3
+            className="text-[10px] font-bold uppercase tracking-widest mb-2 px-1"
+            style={{ background: 'var(--pill-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+          >
             Filters
           </h3>
           <div className="space-y-0.5">
@@ -67,17 +70,23 @@ export function FilterSidebar({ activeFilter = 'all', onFilterChange, activeCate
                     <button
                       onClick={() => onFilterChange(filter.id)}
                       className={`
-                        w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium 
+                        w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium
                         transition-all duration-200 transform-gpu
                         ${isActive
                           ? isForYou
-                            ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md shadow-amber-500/25'
-                            : 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-md shadow-violet-500/20'
+                            ? 'shadow-md'
+                            : 'shadow-md'
                           : isForYou
                             ? 'text-amber-600 hover:text-amber-700 hover:bg-amber-50 hover:shadow-sm hover:translate-x-0.5'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-white hover:shadow-sm hover:translate-x-0.5'
+                            : 'hover:bg-white hover:shadow-sm hover:translate-x-0.5'
                         }
                       `}
+                      style={isActive
+                        ? isForYou
+                          ? { background: 'linear-gradient(135deg,#FBBF24,#F97316)', color: '#fff', boxShadow: '0 2px 12px rgba(249,115,22,0.4)' }
+                          : { background: 'var(--pill-gradient)', color: 'var(--pill-text)', boxShadow: '0 2px 12px rgba(124,58,237,0.4)' }
+                        : { color: isForYou ? undefined : 'var(--nav-text)' }
+                      }
                     >
                       <Icon className={`w-3.5 h-3.5 ${isForYou && !isActive ? 'text-amber-500' : ''}`} />
                       <span>{filter.label}</span>
@@ -98,11 +107,14 @@ export function FilterSidebar({ activeFilter = 'all', onFilterChange, activeCate
           </div>
         </div>
 
-        <Separator className="bg-slate-200" />
+        <Separator style={{ background: 'linear-gradient(90deg, var(--brand), var(--accent))', height: '1.5px', opacity: 0.25 }} />
 
         {/* Categories */}
         <div>
-          <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2 px-1">
+          <h3
+            className="text-[10px] font-bold uppercase tracking-widest mb-2 px-1"
+            style={{ background: 'var(--pill-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+          >
             Categories
           </h3>
           <div className="space-y-0.5">
@@ -116,13 +128,14 @@ export function FilterSidebar({ activeFilter = 'all', onFilterChange, activeCate
                     <button
                       onClick={() => onCategoryChange(isActive ? null : category.id)}
                       className={`
-                        w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium 
+                        w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium
                         transition-all duration-200 transform-gpu
-                        ${isActive
-                          ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-md shadow-violet-500/20'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-white hover:shadow-sm hover:translate-x-0.5'
-                        }
+                        ${isActive ? 'shadow-md' : 'hover:bg-white hover:shadow-sm hover:translate-x-0.5'}
                       `}
+                      style={isActive
+                        ? { background: 'var(--pill-gradient)', color: 'var(--pill-text)', boxShadow: '0 2px 12px rgba(124,58,237,0.4)' }
+                        : { color: 'var(--nav-text)' }
+                      }
                     >
                       <Icon className="w-3.5 h-3.5" />
                       <span>{category.label}</span>

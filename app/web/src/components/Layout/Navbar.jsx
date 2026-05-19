@@ -47,8 +47,8 @@ const Navbar = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-14 lg:h-16">
-      {/* Glassmorphism background - no border */}
-      <div className="absolute inset-0 bg-white/70 backdrop-blur-2xl" />
+      {/* Glassmorphism background */}
+      <div className="absolute inset-0 backdrop-blur-2xl" style={{ backgroundColor: 'var(--bg-nav)', borderBottom: '1px solid var(--nav-border)' }} />
 
       <div className="relative h-full max-w-screen-2xl mx-auto px-4 sm:px-6 flex items-center justify-between">
 
@@ -60,6 +60,7 @@ const Navbar = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="h-10 w-auto"
+            style={{ filter: 'var(--logo-filter)' }}
           />
         </Link>
 
@@ -71,14 +72,20 @@ const Navbar = () => {
           <div className="hidden lg:flex items-center">
             <Link
               to="/forums"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-900/5 transition-all duration-200"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+              style={{ color: 'var(--nav-text)' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--nav-text-hover)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--nav-text)'}
             >
               <Users className="w-4 h-4" />
               <span>Community</span>
             </Link>
             <Link
               to="/saved-items"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-900/5 transition-all duration-200"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+              style={{ color: 'var(--nav-text)' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--nav-text-hover)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--nav-text)'}
             >
               <Bookmark className="w-4 h-4" />
               <span>Saved</span>
@@ -89,7 +96,8 @@ const Navbar = () => {
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Link
               to="/post"
-              className="hidden sm:flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white rounded-full text-sm font-semibold shadow-lg shadow-violet-500/25 transition-all duration-200"
+              className="hidden sm:flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200"
+              style={{ background: 'var(--cta-gradient)', color: 'var(--cta-text)', boxShadow: '0 4px 18px rgba(124,58,237,0.45), 0 1px 4px rgba(219,39,119,0.25)' }}
             >
               <Plus className="w-4 h-4" />
               <span className="hidden lg:inline">Post Deal</span>
@@ -115,15 +123,16 @@ const Navbar = () => {
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
                 <DropdownMenu.Content
-                  className="z-50 min-w-[220px] bg-white/80 backdrop-blur-2xl rounded-2xl shadow-2xl shadow-slate-900/10 p-2 animate-in fade-in-0 zoom-in-95"
+                  className="z-50 min-w-[220px] bg-white/90 backdrop-blur-2xl rounded-2xl shadow-2xl p-2 animate-in fade-in-0 zoom-in-95"
+                  style={{ boxShadow: '0 8px 32px rgba(124,58,237,0.15), 0 2px 8px rgba(0,0,0,0.06)', border: '1px solid rgba(124,58,237,0.12)' }}
                   sideOffset={8}
                   align="end"
                 >
-                  <div className="px-3 py-3 mb-1">
-                    <p className="text-sm font-semibold text-slate-900">
+                  <div className="px-3 py-3 mb-1 rounded-xl" style={{ background: 'linear-gradient(135deg, #EDE9FE, #FAF5FF)' }}>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--brand-text)' }}>
                       {userProfile?.display_name || userProfile?.handle || 'User'}
                     </p>
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
                       {userProfile?.karma ? `${userProfile.karma} karma` : user.email}
                     </p>
                   </div>
@@ -131,9 +140,10 @@ const Navbar = () => {
                   <DropdownMenu.Item asChild>
                     <Link
                       to={`/user/${userProfile?.handle || user?.id}`}
-                      className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-900/5 rounded-xl outline-none cursor-pointer transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl outline-none cursor-pointer transition-colors hover:bg-violet-50"
+                      style={{ color: 'var(--text-secondary)' }}
                     >
-                      <User className="w-4 h-4" />
+                      <User className="w-4 h-4" style={{ color: 'var(--brand)' }} />
                       Profile
                     </Link>
                   </DropdownMenu.Item>
@@ -141,9 +151,10 @@ const Navbar = () => {
                   <DropdownMenu.Item asChild>
                     <Link
                       to="/referrals"
-                      className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-900/5 rounded-xl outline-none cursor-pointer transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl outline-none cursor-pointer transition-colors hover:bg-violet-50"
+                      style={{ color: 'var(--text-secondary)' }}
                     >
-                      <Gift className="w-4 h-4" />
+                      <Gift className="w-4 h-4" style={{ color: 'var(--brand)' }} />
                       Referrals
                     </Link>
                   </DropdownMenu.Item>
@@ -151,9 +162,10 @@ const Navbar = () => {
                   <DropdownMenu.Item asChild>
                     <Link
                       to="/analytics"
-                      className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-900/5 rounded-xl outline-none cursor-pointer transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl outline-none cursor-pointer transition-colors hover:bg-violet-50"
+                      style={{ color: 'var(--text-secondary)' }}
                     >
-                      <BarChart3 className="w-4 h-4" />
+                      <BarChart3 className="w-4 h-4" style={{ color: 'var(--brand)' }} />
                       Analytics
                     </Link>
                   </DropdownMenu.Item>
@@ -161,9 +173,10 @@ const Navbar = () => {
                   <DropdownMenu.Item asChild>
                     <Link
                       to="/notification-settings"
-                      className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-900/5 rounded-xl outline-none cursor-pointer transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl outline-none cursor-pointer transition-colors hover:bg-violet-50"
+                      style={{ color: 'var(--text-secondary)' }}
                     >
-                      <Bell className="w-4 h-4" />
+                      <Bell className="w-4 h-4" style={{ color: 'var(--brand)' }} />
                       Notifications
                     </Link>
                   </DropdownMenu.Item>
@@ -172,15 +185,16 @@ const Navbar = () => {
                     <DropdownMenu.Item asChild>
                       <Link
                         to="/admin"
-                        className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-900/5 rounded-xl outline-none cursor-pointer transition-colors"
+                        className="flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl outline-none cursor-pointer transition-colors hover:bg-violet-50"
+                        style={{ color: 'var(--text-secondary)' }}
                       >
-                        <Settings className="w-4 h-4" />
+                        <Settings className="w-4 h-4" style={{ color: 'var(--brand)' }} />
                         Admin
                       </Link>
                     </DropdownMenu.Item>
                   )}
 
-                  <div className="h-px bg-slate-900/5 my-1.5" />
+                  <div className="h-px my-1.5" style={{ background: 'rgba(124,58,237,0.1)' }} />
 
                   <DropdownMenu.Item
                     onClick={handleSignOut}

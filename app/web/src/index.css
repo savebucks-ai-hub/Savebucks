@@ -4,14 +4,67 @@
 @import './styles/animations.css';
 @import './styles/ai-chat.css';
 
+/* ── Theme: Vibrant Violet & Green ──────────────────────────────────────── */
+/* Swap themes: replace this :root block only — nothing else changes.       */
+:root {
+  --bg-page:     #FAF5FF;
+  --bg-card:     #FFFFFF;
+  --bg-elevated: #F5F3FF;
+  --border:      #DDD6FE;
+  --border-hover:#7C3AED;
+
+  --text-primary:   #1E1B4B;
+  --text-secondary: #4B5563;
+  --text-tertiary:  #9CA3AF;
+  --text-on-brand:  #FFFFFF;
+
+  --brand:      #7C3AED;
+  --brand-dark: #5B21B6;
+  --brand-tint: #EDE9FE;
+  --brand-text: #4C1D95;
+
+  --accent:      #22C55E;
+  --accent-dark: #16A34A;
+  --accent-tint: #DCFCE7;
+  --accent-text: #15803D;
+
+  --heat:      #F59E0B;
+  --heat-tint: #FEF3C7;
+  --heat-text: #B45309;
+
+  --danger:      #DC2626;
+  --danger-tint: #FEE2E2;
+  --success:     #15803D;
+
+  /* ── UI component vars — swap with the theme block above ── */
+  --bg-nav:        rgba(124, 58, 237, 0.06);
+  --nav-border:    rgba(124, 58, 237, 0.18);
+  --nav-text:      #4B5563;
+  --nav-text-hover:#1E1B4B;
+
+  /* CTA button (Post Deal) — vibrant violet → fuchsia */
+  --cta-gradient:  linear-gradient(135deg, #7C3AED 0%, #DB2777 100%);
+  --cta-text:      #FFFFFF;
+  --cta-bg-hover:  #5B21B6;
+
+  /* Active filter / category pill — violet gradient */
+  --pill-gradient: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+  --pill-text:     #FFFFFF;
+
+  /* Logo / brand mark filter for CSS img tinting — violet */
+  --logo-filter:   invert(28%) sepia(82%) saturate(1724%) hue-rotate(252deg) brightness(94%) contrast(97%);
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
   }
 
   body {
-    @apply antialiased bg-secondary-50 text-secondary-900;
-    font-family: 'Inter', system-ui, sans-serif;
+    @apply antialiased;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family: 'Poppins', system-ui, sans-serif;
   }
 
   .dark body {
@@ -652,11 +705,11 @@
 
   0%,
   100% {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
   }
 
   50% {
-    box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
+    box-shadow: 0 0 35px rgba(124, 58, 237, 0.85);
   }
 }
 
@@ -695,7 +748,7 @@
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #7C3AED 0%, #DB2777 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

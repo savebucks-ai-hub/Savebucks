@@ -109,7 +109,8 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Poppins', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['Righteous', 'Poppins', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Consolas', 'monospace'],
       },
       spacing: {
@@ -126,8 +127,9 @@ export default {
         'medium': '0 4px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
         'strong': '0 10px 40px -10px rgba(0, 0, 0, 0.15), 0 2px 10px -2px rgba(0, 0, 0, 0.05)',
         'hero': '0 8px 30px rgba(0,0,0,0.06)',
-        'glow': '0 0 20px rgba(59, 130, 246, 0.5)',
-        'glow-purple': '0 0 20px rgba(147, 51, 234, 0.5)',
+        'glow': '0 0 20px rgba(124, 58, 237, 0.5)',
+        'glow-violet': '0 0 24px rgba(124, 58, 237, 0.55)',
+        'glow-fuchsia': '0 0 24px rgba(219, 39, 119, 0.45)',
       },
       animation: {
         'shimmer': 'shimmer 2s linear infinite',
