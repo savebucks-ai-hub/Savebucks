@@ -38,28 +38,31 @@ fun Route.couponsRoutes() {
             val sort = call.parameters["sort"] ?: "newest"
 
             var query = supabase.from("coupons")
-                .select("id,title,code,type,company_name,company_slug,discount_value,min_order_amount,success_rate,is_verified,is_featured,expires_at,created_at,score")
+                .select("id,title,coupon_code,coupon_type,discount_value,success_rate,is_featured,category_id,expires_at,created_at,views_count,clicks_count,verification_count,used_count")
                 .eq("status", "approved")
 
-            companySlug?.let { query = query.eq("company_slug", it) }
-            categorySlug?.let { query = query.eq("category_slug", it) }
-            type?.let { query = query.eq("type", it) }
+            categorySlug?.let { query = query.eq("category_id", it) }
+            type?.let { query = query.eq("coupon_type", it) }
             search?.let { query = query.ilike("title", "%$it%") }
 
             query = when (sort) {
                 "oldest" -> query.order("created_at", ascending = true)
                 "expiring" -> query.order("expires_at", ascending = true)
-                "popular" -> query.order("score", ascending = false)
+                "popular" -> query.order("clicks_count", ascending = false)
                 "success_rate" -> query.order("success_rate", ascending = false)
                 else -> query.order("created_at", ascending = false)
             }
 
             val coupons = query.limit(limit).offset(offset).execute()
-            call.respond(HttpStatusCode.OK, successResponse(mapOf(
-                "coupons" to coupons,
-                "page" to page,
-                "limit" to limit
-            )))
+            call.respond(HttpStatusCode.OK, buildJsonObject {
+                put("success", true)
+                putJsonObject("data") {
+                    putJsonArray("coupons") { coupons.forEach { add(it) } }
+                    put("page", page)
+                    put("limit", limit)
+                    put("hasMore", coupons.size >= limit)
+                }
+            })
         }
 
         /** GET /api/coupons/:id — full coupon with comments and vote aggregation. */
@@ -80,7 +83,13 @@ fun Route.couponsRoutes() {
                 .order("created_at", ascending = true)
                 .execute()
 
-            call.respond(HttpStatusCode.OK, successResponse(mapOf("coupon" to coupon, "comments" to comments)))
+            call.respond(HttpStatusCode.OK, buildJsonObject {
+                put("success", true)
+                putJsonObject("data") {
+                    put("coupon", coupon)
+                    putJsonArray("comments") { comments.forEach { add(it) } }
+                }
+            })
         }
 
         authenticate("auth") {

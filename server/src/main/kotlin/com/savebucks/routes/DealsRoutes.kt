@@ -32,7 +32,7 @@ fun Route.dealsRoutes() {
          * GET /api/deals — paginated, filtered deal listing.
          * Supports tabs (hot, new, trending, popular) and multiple query filters.
          */
-        authenticate("auth-optional") {
+        authenticate("auth-optional", optional = true) {
             get {
                 val tab = call.parameters["tab"] ?: "hot"
                 val category = call.parameters["category"]
@@ -43,31 +43,32 @@ fun Route.dealsRoutes() {
                 val offset = (page - 1) * limit
 
                 var query = supabase.from("deals")
-                    .select("id,title,url,price,original_price,merchant,discount_percent,image_url,category,status,score,hot_score,view_count,click_count,comment_count,is_featured,created_at,savings")
+                    .select("id,title,url,price,original_price,merchant,discount_percentage,image_url,category_id,quality_score,views_count,clicks_count,is_featured,created_at,expires_at,tags,description,store")
                     .eq("status", "approved")
 
-                category?.let { query = query.eq("category_slug", it) }
+                category?.let { query = query.eq("category_id", it) }
                 merchant?.let { query = query.ilike("merchant", "%$it%") }
                 search?.let { query = query.ilike("title", "%$it%") }
 
-                // Tab-specific ordering
                 query = when (tab) {
                     "new", "new-arrivals" -> query.order("created_at", ascending = false)
-                    "trending" -> query.order("hot_score", ascending = false)
-                    "popular" -> query.order("score", ascending = false)
-                    else -> query.order("hot_score", ascending = false)  // "hot" default
+                    "trending", "popular" -> query.order("quality_score", ascending = false)
+                    else -> query.order("created_at", ascending = false)
                 }
 
                 val deals = query.limit(limit).offset(offset).execute()
-                val total = query.count()
+                val total = deals.size
 
-                call.respond(HttpStatusCode.OK, successResponse(mapOf(
-                    "deals" to deals,
-                    "total" to total,
-                    "page" to page,
-                    "limit" to limit,
-                    "hasMore" to (offset + limit < total)
-                )))
+                call.respond(HttpStatusCode.OK, buildJsonObject {
+                    put("success", true)
+                    putJsonObject("data") {
+                        putJsonArray("deals") { deals.forEach { add(it) } }
+                        put("total", total)
+                        put("page", page)
+                        put("limit", limit)
+                        put("hasMore", deals.size >= limit)
+                    }
+                })
             }
 
             /**
@@ -82,17 +83,14 @@ fun Route.dealsRoutes() {
                     .eq("id", id)
                     .single() ?: throw NotFoundException("Deal not found")
 
-                // Increment view count asynchronously — fire-and-forget via RPC
                 runCatching { supabase.rpc("increment_deal_views", buildJsonObject { put("deal_id", id) }) }
 
-                // Fetch comments with user profiles
                 val comments = supabase.from("comments")
                     .select("*,profiles(handle,avatar_url)")
                     .eq("deal_id", id)
                     .order("created_at", ascending = true)
                     .execute()
 
-                // Fetch user's current vote if authenticated
                 val userVote = user?.let {
                     supabase.from("votes")
                         .select("value")
@@ -101,11 +99,14 @@ fun Route.dealsRoutes() {
                         .single()
                 }
 
-                call.respond(HttpStatusCode.OK, successResponse(mapOf(
-                    "deal" to deal,
-                    "comments" to comments,
-                    "userVote" to userVote
-                )))
+                call.respond(HttpStatusCode.OK, buildJsonObject {
+                    put("success", true)
+                    putJsonObject("data") {
+                        put("deal", deal)
+                        putJsonArray("comments") { comments.forEach { add(it) } }
+                        userVote?.let { put("userVote", it) }
+                    }
+                })
             }
         }
 

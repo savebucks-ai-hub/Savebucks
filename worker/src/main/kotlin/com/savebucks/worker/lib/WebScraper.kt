@@ -79,7 +79,7 @@ class WebScraper {
         // Extract price from common schema.org and site-specific selectors
         val priceText = doc.select("[itemprop=price]").attr("content")
             .ifBlank { doc.select(".price, .deal-price, #priceblock_ourprice").firstOrNull()?.text() }
-            .ifBlank { null }
+            ?.ifBlank { null }
 
         val price = priceText?.replace(Regex("[^0-9.]"), "")?.toDoubleOrNull()?.toString()
 

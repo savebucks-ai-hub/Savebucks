@@ -11,6 +11,7 @@ application {
     mainClass = "com.savebucks.ApplicationKt"
 }
 
+
 dependencies {
     // Core shared module (data models)
     api(projects.core)

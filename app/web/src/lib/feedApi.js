@@ -64,10 +64,11 @@ export const feedApi = {
    */
   normalizeFeedResponse(response) {
     // Handle different response formats from backend
-    // Backend can return: data, items, deals, coupons
-    const items = response?.data || response?.items || response?.deals || response?.coupons || [];
-    const nextCursor = response?.nextCursor || response?.next_cursor || null;
-    const hasMore = response?.hasMore !== undefined ? response.hasMore : (nextCursor !== null);
+    // Backend wraps items in: { success, data: { items, nextCursor, hasMore } }
+    const dataEnvelope = response?.data;
+    const items = dataEnvelope?.items || dataEnvelope || response?.items || response?.deals || response?.coupons || [];
+    const nextCursor = dataEnvelope?.nextCursor ?? dataEnvelope?.next_cursor ?? response?.nextCursor ?? response?.next_cursor ?? null;
+    const hasMore = dataEnvelope?.hasMore !== undefined ? dataEnvelope.hasMore : (response?.hasMore !== undefined ? response.hasMore : nextCursor !== null);
     const meta = response?.meta || {};
 
     // Normalize each item

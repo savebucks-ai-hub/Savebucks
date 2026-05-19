@@ -47,7 +47,7 @@ fun Route.feedRoutes() {
             val (rawDeals, rawCoupons) = coroutineScope {
                 val deals = async {
                     var q = supabase.from("deals")
-                        .select("id,title,url,price,original_price,merchant,discount_percent,image_url,category,score,hot_score,view_count,click_count,comment_count,is_featured,created_at,free_shipping,expires_at,savings")
+                        .select("id,title,url,price,original_price,merchant,discount_percentage,image_url,category_id,quality_score,views_count,clicks_count,is_featured,created_at,expires_at,tags,description,store")
                         .eq("status", "approved")
 
                     // Apply filter-specific constraints
@@ -56,14 +56,12 @@ fun Route.feedRoutes() {
                         "under-25" -> q = q.lte("price", 25)
                         "under-50" -> q = q.lte("price", 50)
                         "freebies" -> q = q.eq("price", 0)
-                        "free-shipping" -> q = q.eq("free_shipping", true)
-                        "50-off" -> q = q.gte("discount_percent", 50)
+                        "50-off" -> q = q.gte("discount_percentage", 50)
                     }
-                    category?.let { q = q.eq("category_slug", it) }
+                    category?.let { q = q.eq("category_id", it) }
 
                     when (sort) {
-                        "trending" -> q = q.order("hot_score", ascending = false)
-                        "popular" -> q = q.order("score", ascending = false)
+                        "trending", "popular" -> q = q.order("quality_score", ascending = false)
                         else -> q = q.order("created_at", ascending = false)
                     }
 
@@ -72,7 +70,7 @@ fun Route.feedRoutes() {
 
                 val coupons = async {
                     supabase.from("coupons")
-                        .select("id,title,code,type,company_name,company_slug,discount_value,is_verified,score,created_at")
+                        .select("id,title,coupon_code,coupon_type,discount_value,category_id,is_featured,created_at,expires_at,views_count,clicks_count,verification_count")
                         .eq("status", "approved")
                         .order("created_at", ascending = false)
                         .limit(limit)

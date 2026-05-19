@@ -33,8 +33,15 @@ class RedisCache(private val config: RedisConfig) {
     } else null
 
     /** Persistent connection to Redis. Reconnects automatically via Lettuce's auto-reconnect. */
-    private val connection: StatefulRedisConnection<String, String>? =
-        redisClient?.connect()
+    private val connection: StatefulRedisConnection<String, String>? = redisClient?.let {
+        try {
+            it.connect()
+        } catch (e: Exception) {
+            log.warn("Redis connection failed, falling back to in-memory cache: ${e.message}")
+            it.shutdown()
+            null
+        }
+    }
 
     private val commands: RedisAsyncCommands<String, String>? =
         connection?.async()
