@@ -19,3 +19,10 @@ captures
 node_modules/
 .env
 **/.env
+
+# Claude Code local config (machine-specific)
+.claude/settings.local.json
+.claude/skills/
+**/app/web/dist/
+server/logs/
+package-lock.json
