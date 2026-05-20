@@ -1,0 +1,11 @@
+.git
+.gradle
+build/
+*/build/
+app/web/node_modules/
+app/web/dist/
+*.log
+.env
+.env.*
+!.env.example
+server/logs/
