@@ -251,7 +251,7 @@ export const api = {
 
   getDeal: (id) => {
     const normalizedId = String(id)
-    return apiRequest(`/api/deals/${normalizedId}`)
+    return apiRequest(`/api/deals/${normalizedId}`).then(r => r?.data?.deal || r?.data || r)
   },
   getRelatedDeals: (categoryId, excludeId) => apiRequest(`/api/deals?category_id=${categoryId}&exclude=${excludeId}&limit=6&sort=popular`),
   getDealComments: (id) => apiRequest(`/api/deals/${id}/comments`),

@@ -261,21 +261,21 @@ fun Route.dealsRoutes() {
                 call.respond(HttpStatusCode.OK, successResponse("Report submitted"))
             }
 
-            /** POST /api/deals/:id/click — track affiliate click for analytics. */
-            post("/{id}/click") {
-                val dealId = call.parameters["id"] ?: throw BadRequestException("Deal ID required")
-                val source = call.parameters["source"] ?: "direct"
+        }
 
-                runCatching {
-                    supabase.rpc("increment_deal_clicks", buildJsonObject { put("deal_id", dealId) })
-                }.onFailure {
-                    // Fallback: direct update if RPC doesn't exist yet
-                    supabase.update("deals", buildJsonObject { put("click_count", JsonPrimitive(0)) })
-                        .eq("id", dealId).execute()
-                }
+        /** POST /api/deals/:id/click — track affiliate click (no auth required).
+         * TODO-Moved ─outside─the─authenticate("auth")─block─ need to check */
+        post("/{id}/click") {
+            val dealId = call.parameters["id"] ?: throw BadRequestException("Deal ID required")
 
-                call.respond(HttpStatusCode.OK, successResponse("Click tracked"))
+            runCatching {
+                supabase.rpc("increment_deal_clicks", buildJsonObject { put("deal_id", dealId) })
+            }.onFailure {
+                supabase.update("deals", buildJsonObject { put("click_count", JsonPrimitive(0)) })
+                    .eq("id", dealId).execute()
             }
+
+            call.respond(HttpStatusCode.OK, successResponse("Click tracked"))
         }
     }
 }
