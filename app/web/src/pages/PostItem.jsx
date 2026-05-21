@@ -5,7 +5,7 @@ import { api } from '../lib/api'
 import { toast } from '../lib/toast'
 import { Input, Textarea } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
-import { Tag, Ticket, Settings, ChevronDown, ChevronRight, Calendar, Upload } from 'lucide-react'
+import { Tag, Ticket, Settings, ChevronDown, ChevronRight, Calendar, Upload, X, Lightbulb } from 'lucide-react'
 import KarmaIndicator from '../components/Submission/KarmaIndicator'
 
 export default function PostItemOrCoupon() {
@@ -699,11 +699,10 @@ export default function PostItemOrCoupon() {
                   onClick={() => setDealData(prev => ({ ...prev, showAdvanced: !prev.showAdvanced }))}
                   className="flex items-center space-x-2 text-secondary-600 hover:text-secondary-800 transition-colors w-full text-left"
                 >
-                  <Icon
-                    name={dealData.showAdvanced ? "chevronDown" : "chevronRight"}
-                    size="sm"
-                    className="transition-transform duration-200"
-                  />
+                  {dealData.showAdvanced
+                    ? <ChevronDown className="w-4 h-4 transition-transform duration-200" />
+                    : <ChevronRight className="w-4 h-4 transition-transform duration-200" />
+                  }
                   <span className="font-medium">
                     {dealData.showAdvanced ? 'Hide Advanced Details' : 'Add More Details'}
                     <span className="text-sm font-normal text-secondary-500 ml-2">
@@ -1022,7 +1021,7 @@ export default function PostItemOrCoupon() {
                               onClick={() => removeImage(index, 'deal')}
                               className="bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                             >
-                              <Icon name="x" size="sm" />
+                              <X className="w-4 h-4" />
                             </button>
                           </div>
                           <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg">
@@ -1172,11 +1171,10 @@ export default function PostItemOrCoupon() {
                   onClick={() => setCouponData(prev => ({ ...prev, showAdvanced: !prev.showAdvanced }))}
                   className="flex items-center space-x-2 text-secondary-600 hover:text-secondary-800 transition-colors w-full text-left"
                 >
-                  <Icon
-                    name={couponData.showAdvanced ? "chevronDown" : "chevronRight"}
-                    size="sm"
-                    className="transition-transform duration-200"
-                  />
+                  {couponData.showAdvanced
+                    ? <ChevronDown className="w-4 h-4 transition-transform duration-200" />
+                    : <ChevronRight className="w-4 h-4 transition-transform duration-200" />
+                  }
                   <span className="font-medium">
                     {couponData.showAdvanced ? 'Hide Advanced Details' : 'Add More Details'}
                     <span className="text-sm font-normal text-secondary-500 ml-2">
@@ -1407,7 +1405,7 @@ export default function PostItemOrCoupon() {
         {/* Tips Section */}
         <div className="mt-6 bg-gradient-to-r from-primary-50 to-blue-50 rounded-xl p-4 border border-primary-200">
           <h3 className="text-base font-semibold text-primary-900 mb-3 flex items-center">
-            <Icon name="lightbulb" size="sm" className="mr-2" />
+            <Lightbulb className="w-4 h-4 mr-2" />
             Tips for Better {postType === 'deal' ? 'Deals' : 'Coupons'}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-primary-800">
