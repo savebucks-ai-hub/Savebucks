@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button'
 import { Tag, Ticket, Settings, ChevronDown, ChevronRight, Calendar, Upload, X, Lightbulb } from 'lucide-react'
 import KarmaIndicator from '../components/Submission/KarmaIndicator'
 
+
 export default function PostItemOrCoupon() {
   const navigate = useNavigate()
   const { isAuthenticated, isInitialized } = useAuth()
