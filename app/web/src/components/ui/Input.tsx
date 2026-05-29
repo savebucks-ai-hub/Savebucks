@@ -5,10 +5,11 @@
 
 import * as React from 'react'
 import { cn } from '../../lib/utils'
+import { Icon } from './Icon'
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-    leftIcon?: React.ReactNode
-    rightIcon?: React.ReactNode
+    leftIcon?: React.ReactNode | string
+    rightIcon?: React.ReactNode | string
     error?: string
     label?: string
 }
@@ -25,7 +26,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 <div className="relative">
                     {leftIcon && (
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                            {leftIcon}
+                            {typeof leftIcon === 'string' ? <Icon name={leftIcon} size="sm" /> : leftIcon}
                         </div>
                     )}
                     <input
@@ -50,7 +51,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                     />
                     {rightIcon && (
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                            {rightIcon}
+                            {typeof rightIcon === 'string' ? <Icon name={rightIcon} size="sm" /> : rightIcon}
                         </div>
                     )}
                 </div>
