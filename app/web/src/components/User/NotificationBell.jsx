@@ -25,13 +25,16 @@ const NotificationBell = () => {
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications'],
     queryFn: () => apiRequest('/api/notifications?limit=10'),
+    select: (res) => Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [],
     enabled: !!user,
     refetchInterval: 30000 // Refetch every 30 seconds
   })
 
   // Mark notification as read mutation
   const markAsReadMutation = useMutation({
-    mutationFn: (notificationIds) => apiRequest('/api/notifications/mark-read', { method: 'POST', body: { notification_ids: notificationIds } }),
+    mutationFn: (notificationIds) => notificationIds.length === 1
+      ? apiRequest(`/api/notifications/${notificationIds[0]}/read`, { method: 'PUT' })
+      : apiRequest('/api/notifications/read-all', { method: 'PUT' }),
     onSuccess: () => {
       queryClient.invalidateQueries(['notifications'])
       toast.success('Notification marked as read')
