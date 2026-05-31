@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import org.jsoup.parser.Parser
 import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(WebScraper::class.java)
@@ -54,6 +55,29 @@ class WebScraper {
             Jsoup.parse(html, url)
         } catch (e: Exception) {
             log.warn("Failed to scrape $url: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Fetches an RSS/Atom feed and parses it with Jsoup's XML parser.
+     * Use this instead of [fetchDocument] for any feed URL — the HTML parser
+     * treats <![CDATA[...]]> as literal text, producing titles like
+     * "<![CDATA[My Deal Title]]>" instead of "My Deal Title".
+     */
+    suspend fun fetchXmlDocument(url: String): Document? = withContext(Dispatchers.IO) {
+        try {
+            val response = httpClient.get(url) {
+                headers.append(HttpHeaders.UserAgent, userAgent)
+                headers.append(HttpHeaders.Accept, "application/rss+xml,application/xml,text/xml,*/*")
+            }
+            if (!response.status.isSuccess()) {
+                log.warn("Fetch of $url returned ${response.status}")
+                return@withContext null
+            }
+            Jsoup.parse(response.bodyAsText(), url, Parser.xmlParser())
+        } catch (e: Exception) {
+            log.warn("Failed to fetch XML from $url: ${e.message}")
             null
         }
     }
