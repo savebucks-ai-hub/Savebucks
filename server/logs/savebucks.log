@@ -1,1 +1,10 @@
-2026-05-17 14:11:28.427 [main] INFO  io.ktor.server.Application - Autoreload is disabled because the development mode is off.
+2026-06-01 05:16:32.398 [eventLoopGroupProxy-4-5] INFO  io.ktor.server.Application - POST /api/analytics/track → 403 Forbidden (74ms)
+2026-06-01 05:16:35.885 [eventLoopGroupProxy-4-6] INFO  io.ktor.server.Application - POST /api/analytics/track → 403 Forbidden (2ms)
+2026-06-01 05:20:12.234 [eventLoopGroupProxy-4-7] INFO  io.ktor.server.Application - POST /api/analytics/track → 403 Forbidden (12ms)
+2026-06-01 05:20:39.680 [eventLoopGroupProxy-4-8] INFO  io.ktor.server.Application - POST /api/analytics/track → 403 Forbidden (2ms)
+2026-06-01 05:21:11.418 [eventLoopGroupProxy-4-9] INFO  io.ktor.server.Application - POST /api/analytics/track → 403 Forbidden (3ms)
+2026-06-01 05:22:53.171 [eventLoopGroupProxy-4-10] INFO  io.ktor.server.Application - POST /api/analytics/track → 403 Forbidden (8ms)
+2026-06-01 05:28:06.112 [eventLoopGroupProxy-4-11] INFO  io.ktor.server.Application - POST /api/analytics/track → 403 Forbidden (19ms)
+2026-06-01 05:31:11.879 [eventLoopGroupProxy-4-12] INFO  io.ktor.server.Application - POST /api/analytics/track → 403 Forbidden (22ms)
+2026-06-01 05:46:47.185 [eventLoopGroupProxy-4-13] INFO  io.ktor.server.Application - POST /api/analytics/track → 403 Forbidden (27ms)
+2026-06-01 05:47:04.705 [lettuce-nioEventLoop-7-2] WARN  i.l.core.protocol.ConnectionWatchdog - Cannot reconnect to [localhost/<unresolved>:6379]: Connection refused: localhost/127.0.0.1:6379

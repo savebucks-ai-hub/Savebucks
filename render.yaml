@@ -1,4 +1,34 @@
 services:
+  # ── Background Worker ─────────────────────────────────────────────────────
+  # Separate service from the API server — runs continuously, no HTTP port.
+  # Render free plan supports background workers without spin-down.
+  #
+  # Redis is required for job queues. Recommended: Upstash Redis free tier
+  #   → https://console.upstash.com  (create DB → copy "rediss://" URL)
+  # Set REDIS_URL in the Render dashboard for both this service and savebucks-api.
+  - type: worker
+    name: savebucks-worker
+    env: docker
+    dockerfilePath: ./worker/Dockerfile
+    plan: free
+    envVars:
+      # ── Required ──────────────────────────────────────────────────────────
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE
+        sync: false
+      # Redis — required. Use Upstash (free) or Render managed Redis ($10/mo).
+      # Format: rediss://default:<password>@<host>.upstash.io:6379
+      - key: REDIS_URL
+        sync: false
+      # ── Optional: Telegram deal ingestion bot ─────────────────────────────
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_ALLOWED_CHANNELS
+        sync: false
+      - key: TELEGRAM_MIN_TITLE_LEN
+        value: "12"
+
   # ── Backend: Ktor API Server ──────────────────────────────────────────────
   - type: web
     name: savebucks-api
