@@ -57,8 +57,8 @@ class CouponProcessor(
             IngestionConfig.Validation.Coupon.MIN_CODE_LENGTH..IngestionConfig.Validation.Coupon.MAX_CODE_LENGTH
         }
 
-        // Deduplicate by URL
-        val byUrl = supabase.select("coupons", mapOf("url" to "eq.${raw.url}", "select" to "id", "limit" to "1"))
+        // Deduplicate by source_url
+        val byUrl = supabase.select("coupons", mapOf("source_url" to "eq.${raw.url}", "select" to "id", "limit" to "1"))
         if (byUrl.isNotEmpty())
             return ProcessResult("skipped", reason = "duplicate_url")
 
@@ -82,21 +82,21 @@ class CouponProcessor(
                 ?.let { companyId = it }
         }
 
-        val insertData = buildJsonObject {
-            put("title", title)
-            put("url", raw.url)
-            put("source", source)
-            put("status", "pending")
-            raw.description?.let { put("description", cleanText(it).take(IngestionConfig.Validation.Coupon.MAX_DESCRIPTION_LENGTH)) }
-            raw.imageUrl?.let { put("image_url", it) }
-            raw.merchant?.let { put("merchant", it) }
-            couponCode?.let { put("coupon_code", it) }
-            raw.discountValue?.let { put("discount_value", it) }
-            raw.discountType?.let { put("discount_type", it) }
-            raw.expiresAt?.let { put("expires_at", it) }
-            raw.externalId?.let { put("external_id", it) }
-            companyId?.let { put("company_id", it) }
-        }
+        // DbMapper translates our readable field names to DB column names
+        val insertData = DbMapper.couponRow(
+            title         = title,
+            url           = raw.url,
+            source        = source,
+            description   = raw.description?.let { cleanText(it).take(IngestionConfig.Validation.Coupon.MAX_DESCRIPTION_LENGTH) },
+            imageUrl      = raw.imageUrl,
+            couponCode    = couponCode,
+            discountValue = raw.discountValue,
+            discountType  = raw.discountType,
+            expiresAt     = raw.expiresAt,
+            externalId    = raw.externalId,
+            companyId     = companyId
+            // merchant: no direct DB column — company link goes through companyId above
+        )
 
         val inserted = supabase.insert("coupons", insertData)
         return if (inserted != null) {

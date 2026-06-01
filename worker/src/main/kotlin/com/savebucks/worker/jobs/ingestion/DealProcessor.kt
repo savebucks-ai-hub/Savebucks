@@ -107,26 +107,23 @@ class DealProcessor(
                 ?.let { imageUrl = it }
         }
 
-        // Step 8: Insert
-        val insertData = buildJsonObject {
-            put("title", deal.title)
-            put("url", primaryUrl)
-            put("source_url", sourceUrl ?: primaryUrl)
-            put("source", source)
-            put("status", "pending")
-            put("deal_type", "discount")
-            put("quality_score", deal.qualityScore)
-            deal.description?.let { put("description", it) }
-            imageUrl?.let { put("image_url", it) }
-            deal.price?.let { put("price", it) }
-            deal.listPrice?.let { put("original_price", it) }
-            deal.merchant?.let { put("merchant", it) }
-            deal.category?.let { put("category", it) }
-            deal.expiresAt?.let { put("expires_at", it) }
-            deal.externalId?.let { put("external_id", it) }
-            deal.couponCode?.let { put("coupon_code", it) }
-            companyId?.let { put("company_id", it) }
-        }
+        // Step 8: Insert — DbMapper translates our readable field names to DB column names
+        val insertData = DbMapper.dealRow(
+            title        = deal.title,
+            url          = primaryUrl,
+            sourceUrl    = sourceUrl,
+            source       = source,
+            description  = deal.description,
+            imageUrl     = imageUrl,
+            price        = deal.price,
+            listPrice    = deal.listPrice,
+            merchant     = deal.merchant,
+            expiresAt    = deal.expiresAt,
+            externalId   = deal.externalId,
+            couponCode   = deal.couponCode,
+            companyId    = companyId,
+            qualityScore = deal.qualityScore
+        )
 
         val inserted = supabase.insert("deals", insertData)
         return if (inserted != null) {

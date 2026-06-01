@@ -9,3 +9,4 @@ app/web/dist/
 .env.*
 !.env.example
 server/logs/
+worker/logs/
