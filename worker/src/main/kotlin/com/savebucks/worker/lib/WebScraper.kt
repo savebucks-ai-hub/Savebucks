@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import org.jsoup.parser.Parser
 import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(WebScraper::class.java)
@@ -24,14 +25,10 @@ class WebScraper {
 
     private val httpClient = HttpClient(CIO) {
         engine {
-            requestTimeout = 15_000
+            requestTimeout = IngestionConfig.Http.TIMEOUT_MS
         }
         followRedirects = true
     }
-
-    // Realistic browser user-agent to avoid bot-detection on most sites
-    private val userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 
     /**
      * Fetches the HTML at [url] and returns a parsed Jsoup [Document].
@@ -40,9 +37,9 @@ class WebScraper {
     suspend fun fetchDocument(url: String): Document? = withContext(Dispatchers.IO) {
         try {
             val response = httpClient.get(url) {
-                headers.append(HttpHeaders.UserAgent, userAgent)
-                headers.append(HttpHeaders.Accept, "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                headers.append(HttpHeaders.AcceptLanguage, "en-US,en;q=0.5")
+                headers.append(HttpHeaders.UserAgent, IngestionConfig.Http.USER_AGENT)
+                headers.append(HttpHeaders.Accept, IngestionConfig.Http.ACCEPT)
+                headers.append(HttpHeaders.AcceptLanguage, IngestionConfig.Http.ACCEPT_LANGUAGE)
             }
 
             if (!response.status.isSuccess()) {
@@ -54,6 +51,30 @@ class WebScraper {
             Jsoup.parse(html, url)
         } catch (e: Exception) {
             log.warn("Failed to scrape $url: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Fetches an RSS/Atom feed and parses it with Jsoup's XML parser.
+     * Use this instead of [fetchDocument] for any feed URL — the HTML parser
+     * treats <![CDATA[...]]> as literal text, producing titles like
+     * "<![CDATA[My Deal Title]]>" instead of "My Deal Title".
+     */
+    suspend fun fetchXmlDocument(url: String): Document? = withContext(Dispatchers.IO) {
+        try {
+            val response = httpClient.get(url) {
+                headers.append(HttpHeaders.UserAgent, IngestionConfig.Http.USER_AGENT)
+                headers.append(HttpHeaders.Accept, "application/rss+xml,application/xml,text/xml,*/*")
+                headers.append(HttpHeaders.AcceptLanguage, IngestionConfig.Http.ACCEPT_LANGUAGE)
+            }
+            if (!response.status.isSuccess()) {
+                log.warn("Fetch of $url returned ${response.status}")
+                return@withContext null
+            }
+            Jsoup.parse(response.bodyAsText(), url, Parser.xmlParser())
+        } catch (e: Exception) {
+            log.warn("Failed to fetch XML from $url: ${e.message}")
             null
         }
     }

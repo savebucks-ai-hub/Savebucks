@@ -26,3 +26,6 @@ node_modules/
 **/app/web/dist/
 server/logs/
 package-lock.json
+/supabase/enable_rls.sql
+worker/logs
+.claude/agents

@@ -38,7 +38,6 @@ fun Application.configureAuthentication(config: AppConfig) {
             realm = "Savebucks API"
             authenticate { credential ->
                 val supabase: SupabaseAdmin by inject()
-                // Returns null for guests — routes handle null principal gracefully
                 runCatching { resolveUser(supabase, credential.token) }.getOrNull()
             }
         }
