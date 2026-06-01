@@ -82,6 +82,47 @@ class SupabaseWorkerClient(
         }
     }
 
+    /**
+     * Deletes rows in [table] matching [filter].
+     * Returns the count of deleted rows (requires the Prefer: return=representation header,
+     * which is already set in adminHeaders).
+     */
+    suspend fun delete(table: String, filter: Map<String, String>): Int {
+        return try {
+            val response = client.delete("$baseUrl/rest/v1/$table") {
+                adminHeaders().forEach { (k, v) -> headers.append(k, v) }
+                filter.forEach { (k, v) -> parameter(k, v) }
+            }
+            if (response.status.isSuccess()) {
+                response.body<JsonArray>().size
+            } else {
+                log.warn("Delete from $table failed: ${response.bodyAsText()}")
+                0
+            }
+        } catch (e: Exception) {
+            log.error("Supabase delete failed on $table: ${e.message}", e)
+            0
+        }
+    }
+
+    /**
+     * Logs an error event to the ingestion_errors table (best-effort — never throws).
+     * The table is expected to have columns: source, error_message, error_type, context.
+     * If the table doesn't exist this silently does nothing.
+     */
+    suspend fun logError(source: String, error: Throwable, context: Map<String, String> = emptyMap()) {
+        runCatching {
+            insert("ingestion_errors", buildJsonObject {
+                put("source", source)
+                put("error_message", (error.message ?: "Unknown error").take(500))
+                put("error_type", error::class.simpleName ?: "Exception")
+                if (context.isNotEmpty()) {
+                    put("context", buildJsonObject { context.forEach { (k, v) -> put(k, v) } })
+                }
+            })
+        }.onFailure { log.debug("Could not log error to ingestion_errors: ${it.message}") }
+    }
+
     /** Closes the underlying Ktor HttpClient. */
     fun close() = client.close()
 }

@@ -3,7 +3,13 @@
     "allow": [
       "Bash(gh repo *)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(./gradlew :worker:compileKotlin *)",
+      "Bash(gh api *)",
+      "Bash(curl *)"
     ]
   }
 }

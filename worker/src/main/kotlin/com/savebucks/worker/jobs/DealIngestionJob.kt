@@ -1,102 +1,176 @@
 package com.savebucks.worker.jobs
 
-import com.savebucks.worker.lib.SupabaseWorkerClient
-import com.savebucks.worker.lib.WebScraper
+import com.savebucks.worker.jobs.ingestion.*
+import com.savebucks.worker.lib.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.serialization.json.*
-import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(DealIngestionJob::class.java)
 
 /**
- * Periodic deal ingestion job — replaces the original Node.js rssFetcher.js.
+ * Fetches RSS feeds for enabled sources and routes items through the full
+ * DealProcessor or CouponProcessor pipeline.
  *
- * Sources mirror the original config:
- *  - Slickdeals frontpage RSS (same URL the Node.js worker used — rss=1&searchin=first)
- *  - TechBargains via FeedBurner (DealNews replaced — their site is down)
- *
- * Runs every 25 minutes (configured in WorkerApplication) to match original schedule.
- * Price is extracted from the RSS title via regex — avoids hitting each deal page
- * individually (Slickdeals deal pages are behind Cloudflare).
+ * Each source is wrapped in a CircuitBreaker (one bad feed won't trip others)
+ * and a RateLimiter (polite crawling).  The SourceRegistry controls which
+ * sources are enabled and at what cadence.
  */
-class DealIngestionJob(private val supabase: SupabaseWorkerClient) {
-
-    private val scraper = WebScraper()
-
-    private val sources = listOf(
-        "https://slickdeals.net/newsearch.php?mode=frontpage&searcharea=deals&searchin=first&rss=1" to "slickdeals",
-        "https://feeds.feedburner.com/techbargains" to "techbargains"
-    )
-
-    // Matches trailing price like "$4.99", "$650", "$1,299.00"
+class DealIngestionJob(
+    private val supabase: SupabaseWorkerClient,
+    private val dealProcessor: DealProcessor,
+    private val couponProcessor: CouponProcessor,
+    private val circuitBreaker: CircuitBreaker,
+    private val rateLimiter: RateLimiter,
+    private val scraper: WebScraper
+) {
+    // Price like "$79.99", "$1,299", "$4"
     private val priceRegex = Regex("""\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)""")
 
-    suspend fun run() = coroutineScope {
-        log.info("DealIngestionJob: starting ingestion from ${sources.size} source(s)...")
-        var totalInserted = 0
-        val results = sources.map { (url, source) ->
-            async { fetchSource(url, source) }
-        }.map { it.await() }
-        results.forEach { totalInserted += it }
-        log.info("DealIngestionJob: inserted $totalInserted new deal(s) total.")
-    }
+    // Coupon codes like "w/ code SAVE20", "code: DEAL"
+    private val couponCodeRegex = Regex(
+        """(?:w/\s*code|code[:\s]|promo(?:\s*code)?[:\s]|coupon[:\s])\s*([A-Z0-9]{3,20})""",
+        RegexOption.IGNORE_CASE
+    )
 
-    private suspend fun fetchSource(feedUrl: String, source: String): Int {
-        val doc = scraper.fetchXmlDocument(feedUrl) ?: return 0
+    // Known merchant names for extraction
+    private val MERCHANTS = listOf(
+        "Amazon", "Walmart", "Best Buy", "Target", "Costco", "Home Depot",
+        "Lowe's", "eBay", "Newegg", "B&H", "Staples", "Sam's Club",
+        "Dell", "HP", "Samsung", "Apple", "Microsoft", "Lenovo"
+    )
 
-        val items = doc.select("item")
-        var inserted = 0
-
-        for (item in items.take(20)) {
-            val title = item.select("title").text().ifBlank { continue }
-            val link = item.select("link").text().ifBlank {
-                item.select("guid").text().ifBlank { continue }
+    /** Called by the Scheduler once per source on its configured interval. */
+    suspend fun runSource(source: IngestionSource) {
+        log.info("[${source.key}] Starting ingestion from: ${source.name}")
+        try {
+            circuitBreaker.withCircuitBreaker(source.key) {
+                rateLimiter.withRateLimit(source.key) {
+                    when (source.type) {
+                        SourceType.RSS_DEALS   -> fetchAndProcessDeals(source)
+                        SourceType.RSS_COUPONS -> fetchAndProcessCoupons(source)
+                    }
+                }
             }
-
-            // Deduplicate by URL
-            val existing = supabase.select("deals", mapOf("url" to "eq.$link", "select" to "id"))
-            if (existing.isNotEmpty()) continue
-
-            val description = item.select("description").text().take(500)
-
-            // Extract price from the RSS title (e.g. "Sony Headphones $79.99 + Free S&H")
-            val price = priceRegex.findAll(title).lastOrNull()?.groupValues?.get(1)
-                ?.replace(",", "")?.toDoubleOrNull()
-
-            // Extract thumbnail from <content:encoded> CDATA — Slickdeals embeds <img> there
-            val encodedContent = item.select("encoded").text()
-                .ifBlank { item.select("content|encoded").text() }
-            val imageUrl = if (encodedContent.isNotBlank()) {
-                runCatching { Jsoup.parse(encodedContent).select("img").firstOrNull()?.attr("src") }
-                    .getOrNull()
-            } else null
-
-            // Extract merchant from description (e.g. "Amazon has ..." or "Walmart has ...")
-            val merchant = extractMerchant(description)
-
-            supabase.insert("deals", buildJsonObject {
-                put("title", title.take(200))
-                put("url", link)
-                put("source", source)
-                put("status", "pending")
-                put("description", description)
-                merchant?.let { put("merchant", it) }
-                price?.let { put("price", it) }
-                imageUrl?.let { put("image_url", it) }
-            })
-            inserted++
+        } catch (e: CircuitOpenException) {
+            log.warn("[${source.key}] ${e.message}")
+        } catch (e: Exception) {
+            log.error("[${source.key}] Ingestion failed: ${e.message}", e)
+            supabase.logError(source.key, e)
         }
-
-        log.info("DealIngestionJob [$source]: inserted $inserted new deal(s).")
-        return inserted
     }
 
-    // Pulls merchant name from common RSS description patterns like "Amazon has ..." or "via Amazon"
-    private fun extractMerchant(description: String): String? {
-        val merchants = listOf("Amazon", "Walmart", "Best Buy", "Target", "Costco",
-            "Home Depot", "Lowe's", "eBay", "Newegg", "B&H", "Staples", "Sam's Club")
-        return merchants.firstOrNull { description.contains(it, ignoreCase = true) }
+    // --- deal RSS ---
+
+    private suspend fun fetchAndProcessDeals(source: IngestionSource) {
+        val doc = withRetry(name = source.key) { scraper.fetchXmlDocument(source.url) }
+            ?: run { log.warn("[${source.key}] Could not fetch RSS feed"); return }
+
+        val rawDeals = parseDealsFromRss(doc, source.key)
+        log.info("[${source.key}] Parsed ${rawDeals.size} item(s) from RSS")
+
+        val result = dealProcessor.processBatch(rawDeals.take(20), source.key)
+        log.info("[${source.key}] Done — created=${result.created} updated=${result.updated} skipped=${result.skipped} errors=${result.errors}")
     }
+
+    private fun parseDealsFromRss(doc: Document, sourceKey: String): List<RawDeal> {
+        return doc.select("item").mapNotNull { item ->
+            runCatching {
+                val title = item.select("title").text().ifBlank { return@mapNotNull null }
+                val link = item.select("link").text().ifBlank {
+                    item.select("guid").text().ifBlank { return@mapNotNull null }
+                }
+
+                val description = item.select("description").text().take(5000)
+                val price = priceRegex.findAll(title).lastOrNull()
+                    ?.groupValues?.get(1)?.replace(",", "")?.toDoubleOrNull()
+
+                // Thumbnail from <content:encoded> CDATA — Slickdeals embeds <img> there
+                val encoded = item.select("encoded").text().ifBlank { item.select("content|encoded").text() }
+                val imageUrl = if (encoded.isNotBlank()) {
+                    runCatching {
+                        org.jsoup.Jsoup.parse(encoded).select("img").firstOrNull()?.attr("src")
+                            ?.takeIf { it.startsWith("http") }
+                    }.getOrNull()
+                } else null
+
+                // Merchant from bracket notation "[amazon.com]" or keyword scan
+                val merchant = extractMerchantBracket(title)
+                    ?: extractMerchantBracket(description)
+                    ?: MERCHANTS.firstOrNull { description.contains(it, ignoreCase = true) }
+
+                val couponCode = couponCodeRegex.find(title)?.groupValues?.get(1)?.uppercase()
+                    ?: couponCodeRegex.find(description)?.groupValues?.get(1)?.uppercase()
+
+                val guid = item.select("guid").text().ifBlank { null }
+
+                RawDeal(
+                    title = title,
+                    url = link,
+                    description = description.ifBlank { null },
+                    imageUrl = imageUrl,
+                    price = price,
+                    merchant = merchant,
+                    couponCode = couponCode,
+                    externalId = if (guid != link) guid else null
+                )
+            }.onFailure { log.debug("[$sourceKey] Skipped malformed item: ${it.message}") }
+            .getOrNull()
+        }
+    }
+
+    // --- coupon RSS ---
+
+    private suspend fun fetchAndProcessCoupons(source: IngestionSource) {
+        val doc = withRetry(name = source.key) { scraper.fetchXmlDocument(source.url) }
+            ?: run { log.warn("[${source.key}] Could not fetch coupon RSS feed"); return }
+
+        val rawCoupons = parseCouponsFromRss(doc, source.key)
+        log.info("[${source.key}] Parsed ${rawCoupons.size} coupon(s) from RSS")
+
+        val result = couponProcessor.processBatch(rawCoupons.take(20), source.key)
+        log.info("[${source.key}] Done — created=${result.created} skipped=${result.skipped} errors=${result.errors}")
+    }
+
+    private fun parseCouponsFromRss(doc: Document, sourceKey: String): List<RawCoupon> {
+        return doc.select("item").mapNotNull { item ->
+            runCatching {
+                val title = item.select("title").text().ifBlank { return@mapNotNull null }
+                val link = item.select("link").text().ifBlank {
+                    item.select("guid").text().ifBlank { return@mapNotNull null }
+                }
+
+                val description = item.select("description").text().take(5000)
+                val merchant = extractMerchantBracket(title)
+                    ?: extractMerchantBracket(description)
+                    ?: MERCHANTS.firstOrNull { title.contains(it, ignoreCase = true) }
+
+                val couponCode = couponCodeRegex.find(title)?.groupValues?.get(1)?.uppercase()
+                    ?: couponCodeRegex.find(description)?.groupValues?.get(1)?.uppercase()
+
+                // Discount percentage like "10% off", "20 percent"
+                val discountValue = Regex("""(\d+(?:\.\d+)?)\s*%""").find(title)
+                    ?.groupValues?.get(1)?.toDoubleOrNull()
+
+                RawCoupon(
+                    title = title,
+                    url = link,
+                    description = description.ifBlank { null },
+                    merchant = merchant,
+                    couponCode = couponCode,
+                    discountValue = discountValue,
+                    discountType = if (discountValue != null) "percent" else null
+                )
+            }.onFailure { log.debug("[$sourceKey] Skipped malformed coupon item: ${it.message}") }
+            .getOrNull()
+        }
+    }
+
+    // --- helpers ---
+
+    /** Extracts merchant from bracket notation like "[amazon.com]" in Slickdeals titles. */
+    private fun extractMerchantBracket(text: String): String? =
+        Regex("""\[([a-z0-9 .&']+)\]""", RegexOption.IGNORE_CASE).find(text)
+            ?.groupValues?.get(1)?.trim()?.ifBlank { null }
 }

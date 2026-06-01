@@ -25,14 +25,10 @@ class WebScraper {
 
     private val httpClient = HttpClient(CIO) {
         engine {
-            requestTimeout = 15_000
+            requestTimeout = IngestionConfig.Http.TIMEOUT_MS
         }
         followRedirects = true
     }
-
-    // Realistic browser user-agent to avoid bot-detection on most sites
-    private val userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 
     /**
      * Fetches the HTML at [url] and returns a parsed Jsoup [Document].
@@ -41,9 +37,9 @@ class WebScraper {
     suspend fun fetchDocument(url: String): Document? = withContext(Dispatchers.IO) {
         try {
             val response = httpClient.get(url) {
-                headers.append(HttpHeaders.UserAgent, userAgent)
-                headers.append(HttpHeaders.Accept, "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                headers.append(HttpHeaders.AcceptLanguage, "en-US,en;q=0.5")
+                headers.append(HttpHeaders.UserAgent, IngestionConfig.Http.USER_AGENT)
+                headers.append(HttpHeaders.Accept, IngestionConfig.Http.ACCEPT)
+                headers.append(HttpHeaders.AcceptLanguage, IngestionConfig.Http.ACCEPT_LANGUAGE)
             }
 
             if (!response.status.isSuccess()) {
@@ -68,8 +64,9 @@ class WebScraper {
     suspend fun fetchXmlDocument(url: String): Document? = withContext(Dispatchers.IO) {
         try {
             val response = httpClient.get(url) {
-                headers.append(HttpHeaders.UserAgent, userAgent)
+                headers.append(HttpHeaders.UserAgent, IngestionConfig.Http.USER_AGENT)
                 headers.append(HttpHeaders.Accept, "application/rss+xml,application/xml,text/xml,*/*")
+                headers.append(HttpHeaders.AcceptLanguage, IngestionConfig.Http.ACCEPT_LANGUAGE)
             }
             if (!response.status.isSuccess()) {
                 log.warn("Fetch of $url returned ${response.status}")

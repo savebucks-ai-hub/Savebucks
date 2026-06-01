@@ -1,10 +1,9 @@
 package com.savebucks.worker
 
-import com.savebucks.worker.jobs.ExpiryJob
 import com.savebucks.worker.jobs.DealIngestionJob
-import com.savebucks.worker.lib.Scheduler
-import com.savebucks.worker.lib.SupabaseWorkerClient
-import com.savebucks.worker.lib.TelegramBot
+import com.savebucks.worker.jobs.ExpiryJob
+import com.savebucks.worker.jobs.ingestion.*
+import com.savebucks.worker.lib.*
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -19,9 +18,9 @@ private val log = LoggerFactory.getLogger("WorkerApplication")
  * service (e.g., a second Render web service or a cron job).
  *
  * Jobs:
- *  - ExpiryJob     — marks deals/coupons as expired when their expiry date passes
- *  - DealIngestionJob — scrapes external deal sources and inserts new deals
- *  - TelegramBot   — optional Telegram channel monitor (enable via TELEGRAM_BOT_TOKEN)
+ *  - ExpiryJob          — marks approved + pending deals/coupons expired; deletes very old records
+ *  - DealIngestionJob   — scrapes enabled RSS sources (see SourceRegistry) for deals and coupons
+ *  - TelegramBot        — optional Telegram channel monitor (enable via TELEGRAM_BOT_TOKEN)
  */
 fun main() { runBlocking {
     loadDotEnv()
@@ -29,61 +28,74 @@ fun main() { runBlocking {
 
     val supabaseUrl = env("SUPABASE_URL") ?: error("SUPABASE_URL required — set it in worker/.env or server/.env")
     val serviceRoleKey = env("SUPABASE_SERVICE_ROLE") ?: error("SUPABASE_SERVICE_ROLE required — set it in worker/.env or server/.env")
+    val minTitleLen = env("TELEGRAM_MIN_TITLE_LEN")?.toIntOrNull() ?: IngestionConfig.Telegram.MIN_TITLE_LENGTH
 
+    // Shared infrastructure — one instance of each, reused across all jobs
     val supabase = SupabaseWorkerClient(supabaseUrl, serviceRoleKey)
+    val scraper = WebScraper()
+    val circuitBreaker = CircuitBreaker()
+    val rateLimiter = RateLimiter()
+
+    // Ingestion pipeline components
+    val deduper = Deduper(supabase)
+    val companyMatcher = CompanyMatcher(supabase)
+    val imageExtractor = ImageExtractor(scraper)
+    val urlResolver = UrlResolver(scraper)
+    val dealProcessor = DealProcessor(supabase, deduper, companyMatcher, imageExtractor, urlResolver)
+    val couponProcessor = CouponProcessor(supabase, companyMatcher)
+    val ingestionJob = DealIngestionJob(supabase, dealProcessor, couponProcessor, circuitBreaker, rateLimiter, scraper)
+
     val scheduler = Scheduler()
 
-    // Register periodic jobs
+    // Expiry cleanup runs every 30 minutes
     scheduler.scheduleRepeating("ExpiryJob", intervalMinutes = 30) {
         ExpiryJob(supabase).run()
     }
 
-    scheduler.scheduleRepeating("DealIngestionJob", intervalMinutes = 25) {
-        DealIngestionJob(supabase).run()
+    // Register one ingestion job per enabled source with its own interval
+    val enabledSources = SourceRegistry.getEnabled()
+    if (enabledSources.isEmpty()) {
+        log.warn("No ingestion sources are enabled — check SourceRegistry")
+    }
+    for (source in enabledSources) {
+        scheduler.scheduleRepeating("Ingest[${source.key}]", intervalMinutes = source.intervalMinutes) {
+            ingestionJob.runSource(source)
+        }
     }
 
-    // Telegram bot is optional — only starts if the token is present
+    // Telegram bot — optional, only starts when token is set
     val telegramToken = env("TELEGRAM_BOT_TOKEN")
     if (!telegramToken.isNullOrBlank()) {
         val allowedChannels = env("TELEGRAM_ALLOWED_CHANNELS")
-            ?.split(",")?.map { it.trim() } ?: emptyList()
-        TelegramBot(supabase, telegramToken, allowedChannels).start(this)
-        log.info("Telegram bot started for channels: $allowedChannels")
+            ?.split(",")?.map { it.trim() }?.filter { it.isNotBlank() } ?: emptyList()
+        TelegramBot(supabase, telegramToken, allowedChannels, minTitleLen).start(this)
+        log.info("Telegram bot started (channels: ${allowedChannels.ifEmpty { listOf("all") }.joinToString()})")
     }
 
-    // Register OS signal handlers for graceful shutdown
     Runtime.getRuntime().addShutdownHook(Thread {
         log.info("Shutdown signal received — stopping worker...")
         scheduler.stop()
+        scraper.close()
         supabase.close()
         log.info("Worker stopped cleanly.")
     })
 
     scheduler.start()
-    log.info("Savebucks worker running. Jobs: ExpiryJob (30m), DealIngestionJob (25m)")
 
-    // Keep the process alive until a shutdown signal (SIGTERM/SIGINT) is received.
-    // Without this, runBlocking returns immediately after registering the jobs because
-    // the scheduler runs on its own CoroutineScope, not this one.
+    val sourcesSummary = enabledSources.joinToString { "${it.key}(${it.intervalMinutes}m)" }
+    log.info("Savebucks worker running. Sources: $sourcesSummary | ExpiryJob(30m)")
+
     awaitCancellation()
 } }
 
-/** Reads a variable from the OS environment first, then JVM system properties (set by loadDotEnv). */
 private fun env(key: String): String? =
     System.getenv(key)?.takeIf { it.isNotBlank() }
         ?: System.getProperty(key)?.takeIf { it.isNotBlank() }
 
-/**
- * Parses a .env file and loads each key into JVM system properties so
- * System.getProperty() can find them. Searches worker/.env then server/.env.
- * Real OS environment variables always take precedence and are never overwritten.
- */
 private fun loadDotEnv() {
     val candidates = listOf(File(".env"), File("worker/.env"), File("server/.env"))
-    val envFile = candidates.firstOrNull { it.exists() }
-    if (envFile == null) {
-        LoggerFactory.getLogger("WorkerApplication")
-            .warn("No .env file found (checked: ${candidates.map { it.path }}). Relying on system environment variables.")
+    val envFile = candidates.firstOrNull { it.exists() } ?: run {
+        log.warn("No .env file found (checked: ${candidates.map { it.path }}). Relying on OS environment.")
         return
     }
     var loaded = 0
@@ -98,6 +110,5 @@ private fun loadDotEnv() {
             loaded++
         }
     }
-    LoggerFactory.getLogger("WorkerApplication")
-        .info("Loaded $loaded variable(s) from ${envFile.path}")
+    log.info("Loaded $loaded variable(s) from ${envFile.path}")
 }
