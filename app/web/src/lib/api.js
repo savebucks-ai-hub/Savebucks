@@ -40,8 +40,13 @@ export async function apiRequest(endpoint, options = {}, retryCount = 0) {
     if (!response.ok) {
       const error = await response.text()
 
-      // Check if it's a JWT expiration error and we haven't retried yet
-      if ((error.includes('JWT expired') || error.includes('expired') || error.includes('invalid JWT') || error.includes('token is expired')) && retryCount === 0) {
+      // Trigger token refresh on any 401 — server now returns {"code":"TOKEN_EXPIRED"}
+      // but we also catch the old string-match pattern for safety.
+      const is401 = response.status === 401
+      const hasExpiredText = error.includes('JWT expired') || error.includes('expired') ||
+        error.includes('invalid JWT') || error.includes('token is expired') ||
+        error.includes('TOKEN_EXPIRED')
+      if ((is401 || hasExpiredText) && retryCount === 0) {
         console.log('🔄 JWT expired, attempting token refresh...')
 
         // Try to refresh the token

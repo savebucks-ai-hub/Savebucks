@@ -83,17 +83,64 @@ fun Route.aiRoutes() {
                     }.onFailure { log.warn("Failed to persist chat message: ${it.message}") }
                 }
 
-                call.respond(HttpStatusCode.OK, successResponse(mapOf(
-                    "message" to response.message,
-                    "dealIds" to response.dealIds,
-                    "intent" to response.intent,
-                    "provider" to response.provider,
-                    "model" to response.model,
-                    "cached" to response.cached,
-                    "tokensUsed" to response.tokensUsed,
-                    // When true, the frontend should show a zip input or "Use My Location" button
-                    "requiresZipcode" to response.requiresZipcode
-                )))
+                // Resolve full deal objects once — used by both JSON and SSE paths.
+                // Both clients get the same data; they just consume it differently.
+                val deals = if (response.dealIds.isNotEmpty()) {
+                    runCatching {
+                        supabase.from("deals")
+                            .select("id,title,url,price,original_price,merchant,discount_percent,image_url,score,is_instore,created_at,expires_at")
+                            .`in`("id", response.dealIds)
+                            .execute()
+                    }.getOrDefault(JsonArray(emptyList()))
+                } else JsonArray(emptyList())
+
+                // Shared metadata block included in every response format
+                val meta = buildJsonObject {
+                    put("intent", response.intent)
+                    put("provider", response.provider)
+                    put("cached", response.cached)
+                    put("tokensUsed", response.tokensUsed)
+                    put("requiresZipcode", response.requiresZipcode)
+                }
+
+                val wantsSSE = call.request.headers[HttpHeaders.Accept]
+                    ?.contains("text/event-stream", ignoreCase = true) == true
+
+                if (wantsSSE) {
+                    // SSE format: one "data: <json>" line per event.
+                    // Event names are semantic data terms — not UI state.
+                    // Any client (web, mobile webview, CLI) can consume this protocol.
+                    //
+                    //  start    — request accepted, stream beginning
+                    //  message  — the AI's text reply
+                    //  deals    — structured deal objects (0..N cards)
+                    //  complete — stream finished, includes request metadata
+                    val sseBody = buildString {
+                        append("data: {\"type\":\"start\"}\n")
+                        append("data: ${buildJsonObject { put("type", "message"); put("text", response.message) }}\n")
+                        if (deals.isNotEmpty()) {
+                            append("data: ${buildJsonObject { put("type", "deals"); put("items", deals) }}\n")
+                        }
+                        append("data: ${buildJsonObject {
+                            put("type", "complete")
+                            put("intent", response.intent)
+                            put("provider", response.provider)
+                            put("cached", response.cached)
+                            put("tokensUsed", response.tokensUsed)
+                            put("requiresZipcode", response.requiresZipcode)
+                        }}\n")
+                    }
+                    call.response.header(HttpHeaders.CacheControl, "no-cache")
+                    call.respondText(sseBody, ContentType.Text.EventStream, HttpStatusCode.OK)
+                } else {
+                    // JSON format: single response body, all data in one shot.
+                    // Preferred by mobile apps and any client that doesn't need streaming.
+                    call.respond(HttpStatusCode.OK, successResponse(mapOf(
+                        "message"  to response.message,
+                        "deals"    to deals,            // full objects, not just IDs
+                        "meta"     to meta
+                    )))
+                }
             }
 
             /** GET /api/ai/conversations — list the authenticated user's conversations. */
@@ -127,12 +174,13 @@ fun Route.aiRoutes() {
                 /** POST /api/ai/conversations — create a new conversation. */
                 post("/conversations") {
                     val user = call.optionalAuth() ?: throw com.savebucks.lib.UnauthorizedException()
-                    val body = call.receive<CreateConversationRequest>()
+                    // Body is entirely optional — title defaults when not provided or body is absent
+                    val body = runCatching { call.receive<CreateConversationRequest>() }.getOrNull()
 
                     val conv = supabase.insert("conversations",
                         buildJsonObject {
                             put("user_id", user.userId)
-                            put("title", body.title ?: "New conversation")
+                            put("title", body?.title ?: "New conversation")
                         }
                     )
                     call.respond(HttpStatusCode.Created, successResponse(conv))

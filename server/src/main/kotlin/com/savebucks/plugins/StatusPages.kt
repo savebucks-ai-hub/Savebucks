@@ -19,6 +19,16 @@ import org.slf4j.LoggerFactory
 fun Application.configureStatusPages() {
     val log = LoggerFactory.getLogger("StatusPages")
     install(StatusPages) {
+        // 401 from Ktor's auth layer returns plain-text "Unauthorized" by default.
+        // Override with a JSON body containing "JWT expired" so the frontend's
+        // token-refresh logic triggers on status code 401 or the error text.
+        status(HttpStatusCode.Unauthorized) { call, _ ->
+            call.respond(
+                HttpStatusCode.Unauthorized,
+                errorResponse("JWT expired")
+            )
+        }
+
         // AppException hierarchy — each subclass carries its own status code
         exception<AppException> { call, cause ->
             call.respond(

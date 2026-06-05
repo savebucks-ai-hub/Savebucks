@@ -14,14 +14,13 @@ import io.ktor.server.plugins.cors.routing.*
 fun Application.configureCORS(config: CorsConfig) {
     install(CORS) {
         config.allowedOrigins.forEach { origin ->
-            // Parse each origin URL into host + optional port so Ktor's allowHost() works correctly
+            // Ktor's allowHost() expects the host:port string and scheme separately.
+            // "http://localhost:5173" → host="localhost:5173", scheme="http"
             val url = origin.trimEnd('/')
-            val withoutScheme = url.removePrefix("https://").removePrefix("http://")
-            val host = withoutScheme.substringBefore(":")
-            val port = withoutScheme.substringAfter(":", "").toIntOrNull()
             val scheme = if (url.startsWith("https")) "https" else "http"
+            val hostWithPort = url.removePrefix("https://").removePrefix("http://")
 
-            allowHost(host, schemes = listOf(scheme), subDomains = emptyList())
+            allowHost(hostWithPort, schemes = listOf(scheme))
         }
 
         allowHeader(HttpHeaders.Authorization)

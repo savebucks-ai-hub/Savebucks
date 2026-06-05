@@ -9,7 +9,13 @@
       "Bash(git commit -m ' *)",
       "Bash(./gradlew :worker:compileKotlin *)",
       "Bash(gh api *)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(docker build *)",
+      "Bash(./gradlew :server:compileKotlin)",
+      "Bash(./gradlew :server:compileKotlin :worker:compileKotlin :core:compileKotlinJvm)",
+      "Bash(./gradlew :server:compileKotlin :worker:compileKotlin)",
+      "Bash(xargs cat)",
+      "Bash(./gradlew :server:compileKotlin --stacktrace)"
     ]
   }
 }
