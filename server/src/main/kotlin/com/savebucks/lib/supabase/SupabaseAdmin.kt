@@ -360,6 +360,20 @@ class SupabaseQueryBuilder(
         filters += col to "fts.${query}"
     }
 
+    /**
+     * PostgREST OR-ILIKE filter — matches any of [patterns] on [col] in a single DB call.
+     * Generates: ?or=(col.ilike.%val1%,col.ilike.%val2%)
+     *
+     * Falls back to a regular `.ilike()` when only one pattern is supplied.
+     */
+    fun orIlike(col: String, patterns: List<String>) = apply {
+        when {
+            patterns.isEmpty() -> Unit
+            patterns.size == 1 -> ilike(col, patterns[0])
+            else -> filters += "or" to "(${patterns.joinToString(",") { "$col.ilike.$it" }})"
+        }
+    }
+
     fun order(col: String, ascending: Boolean = false) = apply {
         orderCol = col
         orderAsc = ascending

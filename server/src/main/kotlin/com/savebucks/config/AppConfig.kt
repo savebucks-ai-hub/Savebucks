@@ -13,6 +13,7 @@ data class AppConfig(
     val supabase: SupabaseConfig,
     val redis: RedisConfig,
     val openai: OpenAiConfig,
+    val groq: GroqConfig,
     val vapid: VapidConfig,
     val cors: CorsConfig,
     val web: WebConfig
@@ -37,6 +38,11 @@ data class AppConfig(
             openai = OpenAiConfig(
                 apiKey = conf(config, "savebucks.openai.apiKey", "OPENAI_API_KEY") ?: "",
                 model = conf(config, "savebucks.openai.model", "OPENAI_MODEL") ?: "gpt-4o-mini"
+            ),
+            groq = GroqConfig(
+                apiKey = conf(config, "savebucks.groq.apiKey", "GROQ_API_KEY") ?: "",
+                dailyLimit = conf(config, "savebucks.groq.dailyLimit", "GROQ_DAILY_LIMIT")
+                    ?.toLongOrNull() ?: com.savebucks.lib.ai.AiConfig.GROQ_DAILY_LIMIT_DEFAULT
             ),
             vapid = VapidConfig(
                 publicKey = conf(config, "savebucks.vapid.publicKey", "VAPID_PUBLIC_KEY") ?: "",
@@ -85,6 +91,10 @@ data class RedisConfig(val url: String) {
 
 data class OpenAiConfig(val apiKey: String, val model: String) {
     /** AI features are disabled gracefully when no API key is present. */
+    val isEnabled: Boolean get() = apiKey.isNotBlank()
+}
+
+data class GroqConfig(val apiKey: String, val dailyLimit: Long) {
     val isEnabled: Boolean get() = apiKey.isNotBlank()
 }
 

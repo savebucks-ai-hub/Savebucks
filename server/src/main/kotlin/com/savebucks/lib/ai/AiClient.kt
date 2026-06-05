@@ -1,6 +1,5 @@
 package com.savebucks.lib.ai
 
-import com.savebucks.config.OpenAiConfig
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -16,15 +15,14 @@ import org.slf4j.LoggerFactory
 private val log = LoggerFactory.getLogger(AiClient::class.java)
 
 /**
- * Low-level OpenAI API client.
+ * Low-level HTTP client for OpenAI-compatible chat completion APIs.
  *
- * Handles authentication, retry with exponential backoff, and error
- * categorisation. Business logic (intent routing, caching, tool execution)
- * lives in [AiOrchestrator] — this class only concerns itself with HTTP.
+ * Both OpenAI and Groq use the same API shape — the only difference is
+ * [baseUrl] and [apiKey]. Business logic lives in [AiProviderRouter].
  */
-class AiClient(private val config: OpenAiConfig) {
+class AiClient(private val baseUrl: String, private val apiKey: String) {
 
-    private val client = HttpClient(CIO) {
+    private val httpClient = HttpClient(CIO) {
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true; isLenient = true })
         }
@@ -38,60 +36,54 @@ class AiClient(private val config: OpenAiConfig) {
         engine { requestTimeout = 60_000 }
     }
 
-    private val baseUrl = "https://api.openai.com/v1"
-
     /**
      * Sends a chat completion request with automatic retry on transient errors.
      *
-     * @param request The full [ChatRequest] including messages and tools.
-     * @param maxRetries Number of retry attempts on rate-limit or server errors.
-     * @return The parsed [ChatResponse] from OpenAI.
-     * @throws AiException when all retries are exhausted or a non-retryable error occurs.
+     * @throws AiQuotaException on HTTP 429 so the router can fall back immediately.
+     * @throws AiException on all other failures after retries are exhausted.
      */
     suspend fun chat(request: ChatRequest, maxRetries: Int = 3): ChatResponse {
         repeat(maxRetries) { attempt ->
             try {
-                val response = client.post("$baseUrl/chat/completions") {
-                    headers.append(HttpHeaders.Authorization, "Bearer ${config.apiKey}")
+                val response = httpClient.post("$baseUrl/chat/completions") {
+                    headers.append(HttpHeaders.Authorization, "Bearer $apiKey")
                     contentType(ContentType.Application.Json)
                     setBody(request)
                 }
 
                 if (response.status == HttpStatusCode.TooManyRequests) {
-                    // Respect Retry-After header if present; otherwise use exponential backoff
-                    val retryAfter = response.headers["Retry-After"]?.toLongOrNull() ?: ((attempt + 1) * 2L)
-                    log.warn("OpenAI rate limited — retrying in ${retryAfter}s (attempt ${attempt + 1})")
-                    delay(retryAfter * 1_000)
-                    return@repeat
+                    // Surface quota exhaustion as a typed exception so the router can fall back
+                    throw AiQuotaException("Rate limited by $baseUrl (HTTP 429)")
                 }
 
                 if (!response.status.isSuccess()) {
-                    throw AiException("OpenAI error ${response.status.value}: ${response.status.description}")
+                    throw AiException("$baseUrl error ${response.status.value}: ${response.status.description}")
                 }
 
                 return response.body<ChatResponse>()
 
+            } catch (e: AiQuotaException) {
+                throw e  // propagate immediately — no point retrying a quota error
             } catch (e: AiException) {
-                throw e  // don't retry on explicit AI errors
+                throw e
             } catch (e: Exception) {
-                if (attempt == maxRetries - 1) throw AiException("OpenAI request failed after $maxRetries attempts: ${e.message}", e)
+                if (attempt == maxRetries - 1) throw AiException("Request to $baseUrl failed after $maxRetries attempts: ${e.message}", e)
                 val backoffMs = (1L shl attempt) * 1_000 + (Math.random() * 500).toLong()
-                log.warn("OpenAI request failed (attempt ${attempt + 1}), retrying in ${backoffMs}ms: ${e.message}")
+                log.warn("Request failed (attempt ${attempt + 1}), retrying in ${backoffMs}ms: ${e.message}")
                 delay(backoffMs)
             }
         }
-        throw AiException("OpenAI request failed after $maxRetries attempts")
+        throw AiException("Request to $baseUrl failed after $maxRetries attempts")
     }
 
-    /** @return true if the OpenAI API is reachable and the key is valid. */
+    /** @return true if the API endpoint is reachable and the key is valid. */
     suspend fun healthCheck(): Boolean = runCatching {
-        val resp = client.get("$baseUrl/models") {
-            headers.append(HttpHeaders.Authorization, "Bearer ${config.apiKey}")
-        }
-        resp.status.isSuccess()
+        httpClient.get("$baseUrl/models") {
+            headers.append(HttpHeaders.Authorization, "Bearer $apiKey")
+        }.status.isSuccess()
     }.getOrDefault(false)
 
-    fun close() = client.close()
+    fun close() = httpClient.close()
 }
 
 /** Thrown when the OpenAI API returns an error or connectivity fails. */

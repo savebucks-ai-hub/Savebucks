@@ -87,8 +87,12 @@ fun Route.aiRoutes() {
                     "message" to response.message,
                     "dealIds" to response.dealIds,
                     "intent" to response.intent,
+                    "provider" to response.provider,
+                    "model" to response.model,
                     "cached" to response.cached,
-                    "tokensUsed" to response.tokensUsed
+                    "tokensUsed" to response.tokensUsed,
+                    // When true, the frontend should show a zip input or "Use My Location" button
+                    "requiresZipcode" to response.requiresZipcode
                 )))
             }
 
@@ -156,14 +160,32 @@ fun Route.aiRoutes() {
             )
         }
 
-        /** Admin-only: usage statistics and cleanup. */
+        /** Admin-only: usage statistics and provider health. */
         authenticate("auth") {
             get("/stats") {
                 call.requireAdmin()
-                val stats = supabase.from("chat_messages")
-                    .select("id")
-                    .execute()
-                call.respond(HttpStatusCode.OK, successResponse(mapOf("totalMessages" to stats.size)))
+                val msgCount = supabase.from("chat_messages").select("id").execute().size
+                val providerStats = orchestrator.providerStats()
+                call.respond(HttpStatusCode.OK, successResponse(mapOf(
+                    "totalMessages" to msgCount,
+                    "provider" to mapOf(
+                        "date" to providerStats.date,
+                        "activeProvider" to providerStats.activeProvider,
+                        "groqEnabled" to providerStats.groqEnabled,
+                        "groqRequestsToday" to providerStats.groqRequestsToday,
+                        "groqDailyLimit" to providerStats.groqDailyLimit,
+                        "groqQuotaRemaining" to providerStats.groqQuotaRemaining,
+                        "groqTokensToday" to providerStats.groqTokensToday,
+                        "fallbacksToday" to providerStats.fallbacksToday
+                    )
+                )))
+            }
+
+            /** GET /api/ai/provider-health — live reachability check for each provider. */
+            get("/provider-health") {
+                call.requireAdmin()
+                val health = orchestrator.providerHealth()
+                call.respond(HttpStatusCode.OK, successResponse(health))
             }
         }
     }

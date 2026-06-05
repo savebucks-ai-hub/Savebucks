@@ -17,7 +17,7 @@ private val log = LoggerFactory.getLogger(AiClassifier::class.java)
  * This pattern (fast local → expensive remote) keeps median latency low
  * while still handling nuanced queries correctly.
  */
-class AiClassifier(private val aiClient: AiClient) {
+class AiClassifier(private val router: AiProviderRouter) {
 
     /**
      * Classifies the [message] into one of the intent types defined in [AiConfig.INTENTS].
@@ -45,9 +45,27 @@ class AiClassifier(private val aiClient: AiClient) {
     private val trendingPatterns = Regex("trending|popular|hot deal|most popular|everyone is buying|what's hot", RegexOption.IGNORE_CASE)
     private val storeInfoPatterns = Regex("store|shop|retailer|website|merchant|brand|about .*(store|shop)", RegexOption.IGNORE_CASE)
     private val helpPatterns = Regex("how (do|does)|help|what can you|explain|tutorial", RegexOption.IGNORE_CASE)
+    private val localPatterns = Regex(
+        // Proximity keywords
+        "near\\s+me|nearby|near\\s*by|close\\s+by|closest|nearest|" +
+        "around\\s+me|around\\s+here|close\\s+to\\s+me|near\\s+my\\s+location|" +
+        // Distance phrases
+        "within\\s+walking|within\\s+\\d+\\s*miles?|" +
+        // "In my/this …" phrases — explicit local scope (city/town/area/zip)
+        "in\\s+my\\s+(area|city|town|zip|neighborhood)|in\\s+this\\s+(area|city|town)|" +
+        // local / locally as standalone words
+        "\\blocal(ly)?\\b|" +
+        // In-store / pickup signals
+        "in[- ]store|in\\s+store|store\\s+pick.?up|pick.?up|stores?\\s+near|" +
+        // Bare zip in query
+        "near\\s+\\d{5}",
+        RegexOption.IGNORE_CASE
+    )
 
     private fun keywordClassify(message: String): ClassifiedIntent {
         val intent = when {
+            // Local intent checked before generic search so "deals near me" → "local" not "search"
+            localPatterns.containsMatchIn(message) -> "local"
             couponPatterns.containsMatchIn(message) -> "coupon"
             comparePatterns.containsMatchIn(message) -> "compare"
             advicePatterns.containsMatchIn(message) -> "advice"
@@ -74,7 +92,7 @@ class AiClassifier(private val aiClient: AiClient) {
             maxTokens = 50,
             temperature = 0.0  // deterministic classification
         )
-        val response = aiClient.chat(request)
+        val response = router.chat(request).response
         val content = response.choices.firstOrNull()?.message?.content ?: return ClassifiedIntent("general", 0.5)
 
         val json = runCatching { kotlinx.serialization.json.Json.parseToJsonElement(content).jsonObject }.getOrNull()
@@ -91,6 +109,7 @@ class AiClassifier(private val aiClient: AiClient) {
 
     private val pricePattern = Regex("""under\s*\$?(\d+)|less than\s*\$?(\d+)|\$?(\d+)\s*or less""", RegexOption.IGNORE_CASE)
     private val discountPattern = Regex("""(\d+)\s*%\s*off""", RegexOption.IGNORE_CASE)
+    private val zipcodePattern = Regex("""\b(\d{5})\b""")
     private val storeNames = setOf("amazon", "walmart", "target", "best buy", "costco", "home depot", "ebay", "nike", "apple")
 
     private fun extractEntities(message: String): Map<String, String> {
@@ -107,6 +126,11 @@ class AiClassifier(private val aiClient: AiClient) {
 
         storeNames.firstOrNull { message.lowercase().contains(it) }?.let {
             entities["store"] = it
+        }
+
+        // Extract inline zipcode so it can be passed to the find_local_deals tool
+        zipcodePattern.find(message)?.let { match ->
+            entities["zipcode"] = match.groupValues[1]
         }
 
         return entities

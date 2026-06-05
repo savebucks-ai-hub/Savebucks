@@ -1,7 +1,8 @@
 package com.savebucks.routes
 
-import com.savebucks.lib.supabase.SupabaseAdmin
+import com.savebucks.lib.location.LocationDetector
 import com.savebucks.lib.redis.RedisCache
+import com.savebucks.lib.supabase.SupabaseAdmin
 import com.savebucks.models.successResponse
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -38,7 +39,11 @@ fun Route.searchRoutes() {
                 return@get
             }
 
-            val cacheKey = "search:${query.hashCode()}:$type:$limit"
+            // Detect location intent and zipcode from the query text only.
+            // No headers — the user must include location keywords or a zip in the search query.
+            val locationCtx = LocationDetector.detect(query, headerZipcode = null)
+
+            val cacheKey = "search:${query.hashCode()}:$type:$limit:${locationCtx.hasLocalIntent}"
             val cached = cache.get(cacheKey)
             if (cached != null) {
                 call.respond(HttpStatusCode.OK, Json.decodeFromString<JsonObject>(cached))
@@ -46,13 +51,14 @@ fun Route.searchRoutes() {
             }
 
             val deals = if (type != "coupons") {
-                supabase.from("deals")
-                    .select("id,title,url,price,merchant,discount_percent,image_url,score")
+                var qb = supabase.from("deals")
+                    .select("id,title,url,price,merchant,discount_percent,image_url,score,is_instore")
                     .eq("status", "approved")
                     .ilike("title", "%$query%")
                     .order("hot_score", ascending = false)
                     .limit(limit)
-                    .execute()
+                if (locationCtx.hasLocalIntent) qb = qb.eq("is_instore", true)
+                qb.execute()
             } else JsonArray(emptyList())
 
             val coupons = if (type != "deals") {
@@ -71,6 +77,7 @@ fun Route.searchRoutes() {
                     put("deals", deals)
                     put("coupons", coupons)
                     put("query", query)
+                    put("localIntent", locationCtx.hasLocalIntent)
                 })
             }
 
