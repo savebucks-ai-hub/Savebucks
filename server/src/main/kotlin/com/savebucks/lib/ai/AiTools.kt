@@ -42,11 +42,12 @@ class AiTools(
         )),
         AiToolDef(function = AiFunction(
             name = "get_coupons",
-            description = "Retrieve active coupon codes for a store or category",
+            description = "Retrieve active coupon codes for a store or category. Use instore=true when the user wants coupons to redeem at a physical location.",
             parameters = buildJsonObject {
                 put("type", "object")
                 putJsonObject("properties") {
-                    putJsonObject("store") { put("type", "string"); put("description", "Store/merchant name") }
+                    putJsonObject("store") { put("type", "string"); put("description", "Store/merchant name or category (e.g. 'haircut', 'Great Clips')") }
+                    putJsonObject("instore") { put("type", "boolean"); put("description", "true = only return coupons valid at a physical store") }
                     putJsonObject("limit") { put("type", "integer") }
                 }
                 putJsonArray("required") { add("store") }
@@ -132,23 +133,26 @@ class AiTools(
     private suspend fun getCoupons(args: JsonObject): String {
         val store = args["store"]?.jsonPrimitive?.contentOrNull ?: return """{"coupons": []}"""
         val limit = args["limit"]?.jsonPrimitive?.intOrNull ?: 5
+        val instoreOnly = args["instore"]?.jsonPrimitive?.booleanOrNull ?: false
 
         // Expand category term to actual merchant names.
         // "haircut" → ["Great Clips", "Supercuts", "Sport Clips", ...]  (cached 24 h)
         // "Great Clips" → ["Great Clips"]  (known brand, no LLM call)
         val merchants = queryExpander.expand(store)
 
-        val results = supabase.from("coupons")
-            .select("id,title,code,type,discount_value,company_name,expires_at,success_rate")
+        var qb = supabase.from("coupons")
+            .select("id,title,code,type,discount_value,company_name,expires_at,success_rate,is_instore,is_online")
             .eq("status", "approved")
             .orIlike("company_name", merchants.map { "%$it%" })
             .order("success_rate", ascending = false)
             .limit(limit)
-            .execute()
+
+        if (instoreOnly) qb = qb.eq("is_instore", true)
+
+        val results = qb.execute()
 
         return buildJsonObject {
             putJsonArray("coupons") { results.forEach { add(it) } }
-            // Surface matched merchant names so the LLM can reference them in its response
             if (merchants.size > 1) putJsonArray("matched_merchants") { merchants.forEach { add(it) } }
         }.toString()
     }

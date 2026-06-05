@@ -266,12 +266,18 @@ class AiOrchestrator(
                 val dealsJob = async {
                     tools.executeTool("find_local_deals", buildLocalArgs(message, intent.entities, zipcode))
                 }
-                // Always attempt coupon search — QueryExpander handles the category→brand mapping.
-                // Skipped only when no meaningful merchant/category term can be extracted
-                // (e.g. "BOGO deals near me" strips to nothing → couponJob = null).
+                // Always attempt coupon search alongside deals for local intent.
+                // Pass instore=true so only physically redeemable coupons are returned.
+                // Skipped when no meaningful merchant/category term remains after stripping
+                // noise (e.g. "BOGO deals near me" → null → no coupon search).
                 val merchant = intent.entities["store"] ?: extractMerchantFromLocalQuery(message)
-                val couponJob = merchant?.let {
-                    async { tools.executeTool("get_coupons", buildArgs("store", it)) }
+                val couponJob = merchant?.let { m ->
+                    async {
+                        tools.executeTool("get_coupons", buildJsonObject {
+                            put("store", m)
+                            put("instore", true)
+                        }.toString())
+                    }
                 }
 
                 listOfNotNull(dealsJob.await(), couponJob?.await())

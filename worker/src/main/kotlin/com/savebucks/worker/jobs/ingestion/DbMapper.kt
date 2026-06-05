@@ -73,6 +73,7 @@ object DbMapper {
         expiresAt: String?,
         externalId: String?,
         companyId: String?,
+        isInstore: Boolean = false,  // → is_instore in DB
         // merchant has no direct text column — company link goes through companyId
         status: String = "pending"
     ): JsonObject = buildJsonObject {
@@ -80,6 +81,8 @@ object DbMapper {
         put("source_url", url)       // url → source_url
         put("source", source)
         put("status", status)
+        put("is_instore", isInstore)
+        put("is_online", !isInstore)  // purely in-store coupons are not valid online
         description?.let { put("description", it) }
         imageUrl?.let    { put("featured_image", it) }  // imageUrl → featured_image
         couponCode?.let  { put("coupon_code", it) }

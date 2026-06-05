@@ -44,5 +44,9 @@ data class Coupon(
     @SerialName("created_at") val createdAt: String = "",
     @SerialName("updated_at") val updatedAt: String = "",
     val tags: List<String> = emptyList(),
-    val savings: Double? = null
+    val savings: Double? = null,
+    /** true for service-business coupons that must be redeemed at a physical location */
+    @SerialName("is_instore") val isInstore: Boolean = false,
+    /** false only for purely in-store coupons (most promo codes default to online) */
+    @SerialName("is_online") val isOnline: Boolean = true
 )
