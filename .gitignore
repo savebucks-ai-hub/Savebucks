@@ -44,6 +44,7 @@ worker/logs/
 
 # ── Claude Code — all machine-specific config, never commit ─────────────────
 .claude/
+.claude/settings.local.json
 
 # ── Supabase ─────────────────────────────────────────────────────────────────
 /supabase/enable_rls.sql
