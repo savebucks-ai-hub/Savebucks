@@ -332,9 +332,9 @@ export function useChat({
                         // Stream started
                         break
 
-                    case 'text':
+                    case 'message':
                         // Append text to current message
-                        currentMessageRef.current += event.content
+                        currentMessageRef.current += event.text
                         setMessages(prev => {
                             const updated = [...prev]
                             const lastIndex = updated.length - 1
@@ -366,16 +366,13 @@ export function useChat({
 
                     case 'deals':
                         // Received deal cards - attach to the CURRENT streaming message by ID
-                        setDeals(event.deals)
+                        setDeals(event.items)
                         setMessages(prev => {
-                            // Find the specific message by ID to attach deals
                             const targetId = currentStreamingIdRef.current
-                            // Deep clone with map to ensure complete immutability
                             return prev.map(msg => {
                                 if (msg.id === targetId && msg.role === MessageRole.ASSISTANT) {
-                                    return { ...msg, deals: event.deals }
+                                    return { ...msg, deals: event.items }
                                 }
-                                // Ensure we return a NEW object for React to detect changes
                                 return { ...msg }
                             })
                         })
@@ -395,7 +392,7 @@ export function useChat({
                         })
                         break
 
-                    case 'done':
+                    case 'complete':
                         // Stream complete
                         clearTimeout(timeoutId)
                         setMessages(prev => {
