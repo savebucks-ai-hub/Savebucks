@@ -42,10 +42,14 @@ fun Route.dealsRoutes() {
                 val limit = (call.parameters["limit"]?.toIntOrNull() ?: 20).coerceIn(1, 100)
                 val offset = (page - 1) * limit
 
+                // ?instore=true — explicit filter to show only in-store/pickup deals
+                val instoreOnly = call.parameters["instore"]?.equals("true", ignoreCase = true) == true
+
                 var query = supabase.from("deals")
-                    .select("id,title,url,price,original_price,merchant,discount_percentage,image_url,category_id,quality_score,views_count,clicks_count,is_featured,created_at,expires_at,tags,description,store")
+                    .select("id,title,url,price,original_price,merchant,discount_percentage,image_url,category_id,quality_score,views_count,clicks_count,is_featured,created_at,expires_at,tags,description,store,is_instore,is_online")
                     .eq("status", "approved")
 
+                if (instoreOnly) query = query.eq("is_instore", true)
                 category?.let { query = query.eq("category_id", it) }
                 merchant?.let { query = query.ilike("merchant", "%$it%") }
                 search?.let { query = query.ilike("title", "%$it%") }
@@ -67,6 +71,7 @@ fun Route.dealsRoutes() {
                         put("page", page)
                         put("limit", limit)
                         put("hasMore", deals.size >= limit)
+                        put("instoreOnly", instoreOnly)
                     }
                 })
             }

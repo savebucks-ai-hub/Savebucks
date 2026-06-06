@@ -16,7 +16,8 @@ data class RawCoupon(
     val discountValue: Double? = null,
     val discountType: String? = null, // "percent" | "fixed"
     val expiresAt: String? = null,
-    val externalId: String? = null
+    val externalId: String? = null,
+    val isInstore: Boolean = false
 )
 
 /**
@@ -32,6 +33,15 @@ class CouponProcessor(
     // Extracts codes like "w/ code SAVE20", "code: SUMMER", "promo DEAL15"
     private val CODE_REGEX = Regex(
         """(?:w/\s*code|code[:\s]|promo(?:\s*code)?[:\s]|coupon(?:\s*code)?[:\s])\s*([A-Z0-9]{3,20})""",
+        RegexOption.IGNORE_CASE
+    )
+
+    // Signals that a coupon must be redeemed at a physical location
+    private val instorePattern = Regex(
+        "in[- ]store|in\\s+store\\s+only|show\\s+in\\s+store|present\\s+at\\s+register|" +
+        "bring\\s+to\\s+store|valid\\s+in[- ]store|printable\\s+coupon|redeem\\s+in[- ]store|" +
+        "in-store\\s+coupon|store\\s+coupon|at\\s+(the\\s+)?register|walk[- ]in|" +
+        "ymmv|your\\s+mileage\\s+may\\s+vary",
         RegexOption.IGNORE_CASE
     )
 
@@ -82,6 +92,11 @@ class CouponProcessor(
                 ?.let { companyId = it }
         }
 
+        // Detect in-store: check raw flag first, then scan title + description
+        val isInstore = raw.isInstore ||
+            instorePattern.containsMatchIn(raw.title) ||
+            (!raw.description.isNullOrBlank() && instorePattern.containsMatchIn(raw.description))
+
         // DbMapper translates our readable field names to DB column names
         val insertData = DbMapper.couponRow(
             title         = title,
@@ -94,7 +109,8 @@ class CouponProcessor(
             discountType  = raw.discountType,
             expiresAt     = raw.expiresAt,
             externalId    = raw.externalId,
-            companyId     = companyId
+            companyId     = companyId,
+            isInstore     = isInstore
             // merchant: no direct DB column — company link goes through companyId above
         )
 

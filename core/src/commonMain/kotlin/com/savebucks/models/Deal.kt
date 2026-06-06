@@ -43,6 +43,10 @@ data class Deal(
     val tags: List<String> = emptyList(),
     @SerialName("free_shipping") val freeShipping: Boolean = false,
     @SerialName("stock_status") val stockStatus: String? = null,
+    /** true when deal requires physical store visit or in-store pickup */
+    @SerialName("is_instore") val isInstore: Boolean = false,
+    /** false only for truly local-only deals (nearly all scraped deals are online) */
+    @SerialName("is_online") val isOnline: Boolean = true,
     /** Computed savings = originalPrice - price */
     val savings: Double? = null
 )

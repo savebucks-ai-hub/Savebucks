@@ -85,6 +85,13 @@ data class AiResponse(
     val dealIds: List<String> = emptyList(),
     val intent: String = "general",
     val model: String = AiConfig.MODEL_DEFAULT,
+    val provider: String = "openai",   // "groq" or "openai"
     val cached: Boolean = false,
-    val tokensUsed: Int = 0
+    val tokensUsed: Int = 0,
+    /**
+     * True when the AI needs a zipcode to complete a local search.
+     * The frontend should show a "Use My Location" button or a zip input field.
+     * On the next request, supply the zip via the `zipcode` field or X-User-Zipcode header.
+     */
+    val requiresZipcode: Boolean = false
 )

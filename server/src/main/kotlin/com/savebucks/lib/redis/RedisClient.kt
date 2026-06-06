@@ -96,6 +96,16 @@ class RedisCache(private val config: RedisConfig) {
         }
     }
 
+    /** Atomically increments a counter by [amount] and returns the new value. */
+    suspend fun incrBy(key: String, amount: Long): Long = withContext(Dispatchers.IO) {
+        commands?.incrby(key, amount)?.await() ?: run {
+            val cur = memGet(key)?.toLongOrNull() ?: 0L
+            val next = cur + amount
+            memSet(key, next.toString())
+            next
+        }
+    }
+
     /** Sets expiry on an existing key (no-op if key doesn't exist). */
     suspend fun expire(key: String, ttlSeconds: Long) = withContext(Dispatchers.IO) {
         commands?.expire(key, ttlSeconds)?.await()

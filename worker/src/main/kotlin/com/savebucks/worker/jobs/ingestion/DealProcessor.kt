@@ -18,7 +18,8 @@ data class RawDeal(
     val category: String? = null,
     val expiresAt: String? = null,
     val externalId: String? = null,
-    val couponCode: String? = null
+    val couponCode: String? = null,
+    val isInstore: Boolean = false
 )
 
 data class ProcessResult(
@@ -122,7 +123,8 @@ class DealProcessor(
             externalId   = deal.externalId,
             couponCode   = deal.couponCode,
             companyId    = companyId,
-            qualityScore = deal.qualityScore
+            qualityScore = deal.qualityScore,
+            isInstore    = deal.isInstore
         )
 
         val inserted = supabase.insert("deals", insertData)
@@ -166,7 +168,15 @@ class DealProcessor(
         val expiresAt: String?,
         val externalId: String?,
         val couponCode: String?,
-        val qualityScore: Double
+        val qualityScore: Double,
+        val isInstore: Boolean
+    )
+
+    // Signals that a deal requires a physical store visit rather than being purely online.
+    // YMMV ("your mileage may vary") is a Slickdeals convention for in-store deals.
+    private val instorePattern = Regex(
+        "in[- ]store|in store only|store pick.?up|pick.?up in store|store only|ymmv|local deal|at (the )?store|in-store price",
+        RegexOption.IGNORE_CASE
     )
 
     private fun normalize(raw: RawDeal, source: String): NormalizedDeal {
@@ -181,6 +191,11 @@ class DealProcessor(
         if (!raw.category.isNullOrBlank()) score += 0.05
         if (IngestionConfig.AutoApproval.TRUSTED_SOURCES.contains(source)) score += 0.1
 
+        // Detect in-store: check the raw flag first, then scan title + description for signals
+        val isInstore = raw.isInstore ||
+            instorePattern.containsMatchIn(raw.title) ||
+            (!raw.description.isNullOrBlank() && instorePattern.containsMatchIn(raw.description))
+
         return NormalizedDeal(
             title = title,
             url = raw.url.trim(),
@@ -193,7 +208,8 @@ class DealProcessor(
             expiresAt = raw.expiresAt,
             externalId = raw.externalId,
             couponCode = raw.couponCode?.uppercase()?.trim()?.ifBlank { null },
-            qualityScore = minOf(1.0, score)
+            qualityScore = minOf(1.0, score),
+            isInstore = isInstore
         )
     }
 

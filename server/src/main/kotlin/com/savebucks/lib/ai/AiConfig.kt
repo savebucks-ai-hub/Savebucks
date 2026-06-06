@@ -6,9 +6,16 @@ package com.savebucks.lib.ai
  * so they can be tuned without touching business logic.
  */
 object AiConfig {
-    // Models — primary is cheap/fast; fallback handles complex reasoning
+    // OpenAI models — used as fallback when Groq quota is exhausted
     const val MODEL_DEFAULT = "gpt-4o-mini"
     const val MODEL_COMPLEX = "gpt-4o"
+
+    // Groq models (free tier) — primary provider
+    const val GROQ_MODEL_FAST = "llama-3.1-8b-instant"       // simple queries, classification
+    const val GROQ_MODEL_QUALITY = "llama-3.3-70b-versatile" // complex reasoning
+
+    // Groq free-tier hard cap (actual limit is 14,400 — keep buffer for safety)
+    const val GROQ_DAILY_LIMIT_DEFAULT = 14_000L
 
     // Token budgets per request
     const val MAX_INPUT_CHARS = 2_000
@@ -27,5 +34,5 @@ object AiConfig {
     const val CACHE_TOOL_TTL = 120L       // tool results (deals/coupons) — 2 min
 
     // Intent types
-    val INTENTS = setOf("search", "coupon", "compare", "advice", "trending", "store_info", "help", "general")
+    val INTENTS = setOf("search", "coupon", "compare", "advice", "trending", "store_info", "help", "local", "general")
 }

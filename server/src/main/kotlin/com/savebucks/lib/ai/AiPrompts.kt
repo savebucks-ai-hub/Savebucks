@@ -47,10 +47,30 @@ object AiPrompts {
     /** Short classification prompt used by [AiClassifier]. */
     val CLASSIFY_PROMPT = """
         Classify the user's shopping query into one of these intents:
-        search, coupon, compare, advice, trending, store_info, help, general
+        search, coupon, compare, advice, trending, store_info, help, local, general
+
+        local = user wants nearby, in-store, or location-specific deals.
 
         Respond ONLY with valid JSON: {"intent": "...", "confidence": 0.0-1.0}
     """.trimIndent()
+
+    // ─── Zipcode / location conversation flow ────────────────────────────────
+
+    /**
+     * Marker string included in the ask-for-zipcode message.
+     * Used to recognise — without an LLM call — that the previous assistant turn
+     * was waiting for a zipcode, so a bare 5-digit reply should trigger a local search.
+     */
+    const val ASK_ZIPCODE_MARKER = "zip code"
+
+    /** Sent when local intent is detected but no zipcode is available. No LLM cost. */
+    const val ASK_ZIPCODE_MSG =
+        "I'd love to find deals near you! 📍 What's your zip code? " +
+        "Or tap **Use My Location** and I'll detect it automatically."
+
+    /** Sent when the user replies but still hasn't provided a valid zipcode. No LLM cost. */
+    const val ASK_ZIPCODE_AGAIN_MSG =
+        "No worries! Just tap **Use My Location** below and I'll find deals near you automatically. 🗺️"
 
     // ─── Pre-built error / status messages ──────────────────────────────────
 
