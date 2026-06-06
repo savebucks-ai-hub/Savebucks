@@ -1,12 +1,17 @@
-*.iml
+# ── Build outputs ────────────────────────────────────────────────────────────
 .kotlin
 .gradle
 **/build/
-xcuserdata
 !src/**/build/
-local.properties
+
+# ── IDE ──────────────────────────────────────────────────────────────────────
+*.iml
 .idea
 .DS_Store
+
+# ── Android / iOS ────────────────────────────────────────────────────────────
+local.properties
+xcuserdata
 captures
 .externalNativeBuild
 .cxx
@@ -16,16 +21,29 @@ captures
 !*.xcodeproj/project.xcworkspace/
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
-node_modules/
-.env
-**/.env
 
-# Claude Code local config (machine-specific)
-.claude/settings.local.json
-.claude/skills/
-**/app/web/dist/
-server/logs/
+# ── Node.js ───────────────────────────────────────────────────────────────────
+node_modules/
 package-lock.json
+
+# ── Environment files — NEVER commit real secrets ────────────────────────────
+.env
+.env.*
+**/.env
+**/.env.*
+# .env.example files are templates with no real values — they SHOULD be committed
+!.env.example
+!**/.env.example
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+server/logs/
+worker/logs/
+
+# ── Frontend build output ────────────────────────────────────────────────────
+**/app/web/dist/
+
+# ── Claude Code — all machine-specific config, never commit ─────────────────
+.claude/
+
+# ── Supabase ─────────────────────────────────────────────────────────────────
 /supabase/enable_rls.sql
-worker/logs
-.claude/agents
